@@ -25,6 +25,229 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="History"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_centerVertical="true"/>
+        </RelativeLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/history_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp"/>
+    </LinearLayout>
+
+    <!-- Playlist Layout -->
+    <LinearLayout
+        android:id="@+id/playlist_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_navigation"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:background="#2a2a2a">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Playlist"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_centerVertical="true"/>
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <Button
+                android:id="@+id/button_add_url"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Add URL"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#4FC3F7"/>
+
+            <Button
+                android:id="@+id/button_select_file"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Select File"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#4FC3F7"/>
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/playlist_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp"/>
+    </LinearLayout>
+
+    <!-- Settings Layout -->
+    <LinearLayout
+        android:id="@+id/settings_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_navigation"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Settings"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Coming Soon"
+            android:textColor="#808080"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+
+    <!-- Bottom Navigation -->
+    <LinearLayout
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#2a2a2a"
+        android:padding="8dp">
+
+        <LinearLayout
+            android:id="@+id/nav_home"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="4dp">
+            
+            <ImageView
+                android:id="@+id/nav_home_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_compass"
+                android:tint="#4FC3F7"/>
+            
+            <TextView
+                android:id="@+id/nav_home_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home"
+                android:textColor="#4FC3F7"
+                android:textSize="11sp"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_history"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="4dp">
+            
+            <ImageView
+                android:id="@+id/nav_history_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_recent_history"
+                android:tint="#808080"/>
+            
+            <TextView
+                android:id="@+id/nav_history_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="History"
+                android:textColor="#808080"
+                android:textSize="11sp"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_playlist"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="4dp">
+            
+            <ImageView
+                android:id="@+id/nav_playlist_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_sort_by_size"
+                android:tint="#808080"/>
+            
+            <TextView
+                android:id="@+id/nav_playlist_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Playlist"
+                android:textColor="#808080"
+                android:textSize="11sp"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/nav_settings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="4dp">
+            
+            <ImageView
+                android:id="@+id/nav_settings_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:tint="#808080"/>
+            
+            <TextView
+                android:id="@+id/nav_settings_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Settings"
+                android:textColor="#808080"
+                android:textSize="11sp"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:background="#2a2a2a">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Network Stream (Video) Player"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp"
@@ -32,14 +255,14 @@
                 android:layout_centerVertical="true"/>
                 
             <ImageButton
-                android:id="@+id/button_save_playlist"
+                android:id="@+id/button_history"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_alignParentEnd="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_save"
+                android:src="@android:drawable/ic_menu_recent_history"
                 android:tint="#FFFFFF"
-                android:contentDescription="Save to Playlist"/>
+                android:contentDescription="History"/>
         </RelativeLayout>
 
         <ScrollView
@@ -77,7 +300,6 @@
                     android:layout_marginBottom="12dp"
                     android:background="@drawable/edit_text_background"/>
 
-                <!-- Cookie Value -->
                 <EditText
                     android:id="@+id/edit_text_cookie"
                     android:layout_width="match_parent"
@@ -90,7 +312,6 @@
                     android:layout_marginBottom="12dp"
                     android:background="@drawable/edit_text_background"/>
 
-                <!-- Referer Value -->
                 <EditText
                     android:id="@+id/edit_text_referer"
                     android:layout_width="match_parent"
@@ -103,7 +324,6 @@
                     android:layout_marginBottom="12dp"
                     android:background="@drawable/edit_text_background"/>
 
-                <!-- Origin Value -->
                 <EditText
                     android:id="@+id/edit_text_origin"
                     android:layout_width="match_parent"
@@ -116,7 +336,6 @@
                     android:layout_marginBottom="12dp"
                     android:background="@drawable/edit_text_background"/>
 
-                <!-- DRM License URL -->
                 <EditText
                     android:id="@+id/edit_text_drm_license"
                     android:layout_width="match_parent"
@@ -129,14 +348,12 @@
                     android:layout_marginBottom="12dp"
                     android:background="@drawable/edit_text_background"/>
 
-                <!-- UserAgent and DrmScheme Row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:layout_marginBottom="16dp">
 
-                    <!-- UserAgent Spinner -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -162,7 +379,6 @@
                             android:popupBackground="#2a2a2a"/>
                     </LinearLayout>
 
-                    <!-- DrmScheme Spinner -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -189,7 +405,6 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Play Button -->
                 <ImageButton
                     android:id="@+id/button_play"
                     android:layout_width="64dp"
@@ -204,121 +419,13 @@
         </ScrollView>
     </LinearLayout>
 
-    <!-- Playlist Layout -->
+    <!-- History Layout -->
     <LinearLayout
-        android:id="@+id/playlist_layout"
+        android:id="@+id/history_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/bottom_navigation"
         android:orientation="vertical"
         android:visibility="gone">
 
-        <!-- Playlist Header -->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:background="#2a2a2a">
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Playlist"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_centerVertical="true"/>
-        </RelativeLayout>
-
-        <!-- Playlist RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/playlist_recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="8dp"/>
-    </LinearLayout>
-
-    <!-- Bottom Navigation -->
-    <LinearLayout
-        android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="horizontal"
-        android:background="#2a2a2a"
-        android:padding="8dp">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-            
-            <ImageButton
-                android:id="@+id/nav_home"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_view"
-                android:tint="#4FC3F7"
-                android:contentDescription="Home"/>
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Home"
-                android:textColor="#4FC3F7"
-                android:textSize="12sp"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-            
-            <ImageButton
-                android:id="@+id/nav_playlist"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_sort_by_size"
-                android:tint="#808080"
-                android:contentDescription="Playlist"/>
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Playlist"
-                android:textColor="#808080"
-                android:textSize="12sp"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-            
-            <ImageButton
-                android:id="@+id/nav_settings"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_preferences"
-                android:tint="#808080"
-                android:contentDescription="Settings"/>
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Settings"
-                android:textColor="#808080"
-                android:textSize="12sp"/>
-        </LinearLayout>
-    </LinearLayout>
-
-</RelativeLayout>
+    </RelativeLayout>
