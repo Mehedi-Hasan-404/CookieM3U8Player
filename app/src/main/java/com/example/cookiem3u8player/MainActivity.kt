@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         
         // Populate with the last example values for quick initial testing
         urlEditText.setText("https://bldcmprod-cdn.toffeelive.com/cdn/live/sonysab_hd/playlist.m3u8")
-        cookieEditText.setText("Edge-Cache-Cookie=URLPrefix=aHR0cHM6Ly9ibGRjbXByb2QtY2RuLnRvZmZlZWxpdmUuY29t:Expires=1758873354:KeyName=prod_linear:Signature=9zeoPXClORHblk9Y51JStd9z26-vVYf_rL_1RA1GddR-zQxew0PgS2PfgMlR4ZQ0TQ3F-2S6EeSG6042FvZoBg")
+        cookieEditText.setText("Edge-Cache-Cookie=URLPrefix=aHR0cHM6Ly9ibGRjbXByb2QtY2RuLnRvZmZlZWxpdmUuY29t:Expires=1761572334:KeyName=prod_linear:Signature=eiX9W8NcWl19TxAcUDjRNX5w6jgFcueipQAGjfw-eV4k37n1sakXqAlUouKZvRkirj2462qa9PMKRC3HI9kyBQ")
 
         // Set up the Play button click listener
         playButton.setOnClickListener {
