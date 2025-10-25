@@ -7,6 +7,12 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
+// Data class for PlaylistItem (matching the layout expectations)
+data class PlaylistItem(
+    var name: String = "",
+    var url: String = ""
+)
+
 class PlaylistAdapter(
     private val items: MutableList<PlaylistItem>,
     private val onItemClick: (PlaylistItem) -> Unit,
