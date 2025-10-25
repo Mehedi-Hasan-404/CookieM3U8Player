@@ -1,6 +1,5 @@
 plugins {
     id 'com.android.application'
-    // FIX: Changed 'org.jetbrains.kotlin.android' to the shorter 'kotlin-android' form
     id 'kotlin-android' 
 }
 
@@ -31,10 +30,9 @@ android {
     }
 }
 
-repositories {
-    google()
-    mavenCentral()
-}
+// FIX: The redundant 'repositories' block has been removed. 
+// Repository configuration is now handled exclusively by settings.gradle.
+
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
