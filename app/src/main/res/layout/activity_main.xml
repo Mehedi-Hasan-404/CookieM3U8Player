@@ -25,6 +25,196 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="Network Stream (Video) Player"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_centerVertical="true"/>
+                
+            <ImageButton
+                android:id="@+id/button_history"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_recent_history"
+                android:tint="#FFFFFF"
+                android:contentDescription="History"/>
+        </RelativeLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Video Player -->
+                <com.google.android.exoplayer2.ui.StyledPlayerView
+                    android:id="@+id/player_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:background="#000000"
+                    app:resize_mode="fit"
+                    app:use_controller="true"
+                    app:surface_type="surface_view"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- Media Stream URL -->
+                <EditText
+                    android:id="@+id/edit_text_url"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Media Stream URL"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textUri"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <EditText
+                    android:id="@+id/edit_text_cookie"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Cookie Value"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textMultiLine"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <EditText
+                    android:id="@+id/edit_text_referer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Referer Value"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textUri"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <EditText
+                    android:id="@+id/edit_text_origin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Origin Value"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textUri"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <EditText
+                    android:id="@+id/edit_text_drm_license"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="DRM License URL"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textUri"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="UserAgent"
+                            android:textColor="#808080"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="4dp"
+                            android:layout_marginStart="4dp"/>
+                        
+                        <Spinner
+                            android:id="@+id/spinner_user_agent"
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            android:background="@drawable/spinner_background"
+                            android:padding="12dp"
+                            android:popupBackground="#2a2a2a"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DrmScheme"
+                            android:textColor="#808080"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="4dp"
+                            android:layout_marginStart="4dp"/>
+                        
+                        <Spinner
+                            android:id="@+id/spinner_drm_scheme"
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            android:background="@drawable/spinner_background"
+                            android:padding="12dp"
+                            android:popupBackground="#2a2a2a"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/button_play"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/play_button_background"
+                    android:src="@android:drawable/ic_media_play"
+                    android:tint="#FFFFFF"
+                    android:contentDescription="Play Stream"/>
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- History Layout -->
+    <LinearLayout
+        android:id="@+id/history_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_navigation"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <!-- Header -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:background="#2a2a2a">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="History"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp"
@@ -240,192 +430,4 @@
         </LinearLayout>
     </LinearLayout>
 
-</RelativeLayout>android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:background="#2a2a2a">
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Network Stream (Video) Player"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_centerVertical="true"/>
-                
-            <ImageButton
-                android:id="@+id/button_history"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_alignParentEnd="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_recent_history"
-                android:tint="#FFFFFF"
-                android:contentDescription="History"/>
-        </RelativeLayout>
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <!-- Video Player -->
-                <com.google.android.exoplayer2.ui.StyledPlayerView
-                    android:id="@+id/player_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    android:background="#000000"
-                    app:resize_mode="fit"
-                    app:use_controller="true"
-                    app:surface_type="surface_view"
-                    android:layout_marginBottom="16dp"/>
-
-                <!-- Media Stream URL -->
-                <EditText
-                    android:id="@+id/edit_text_url"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Media Stream URL"
-                    android:textColorHint="#808080"
-                    android:textColor="#FFFFFF"
-                    android:inputType="textUri"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/edit_text_background"/>
-
-                <EditText
-                    android:id="@+id/edit_text_cookie"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Cookie Value"
-                    android:textColorHint="#808080"
-                    android:textColor="#FFFFFF"
-                    android:inputType="textMultiLine"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/edit_text_background"/>
-
-                <EditText
-                    android:id="@+id/edit_text_referer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Referer Value"
-                    android:textColorHint="#808080"
-                    android:textColor="#FFFFFF"
-                    android:inputType="textUri"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/edit_text_background"/>
-
-                <EditText
-                    android:id="@+id/edit_text_origin"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Origin Value"
-                    android:textColorHint="#808080"
-                    android:textColor="#FFFFFF"
-                    android:inputType="textUri"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/edit_text_background"/>
-
-                <EditText
-                    android:id="@+id/edit_text_drm_license"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="DRM License URL"
-                    android:textColorHint="#808080"
-                    android:textColor="#FFFFFF"
-                    android:inputType="textUri"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/edit_text_background"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="16dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginEnd="8dp">
-                        
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="UserAgent"
-                            android:textColor="#808080"
-                            android:textSize="12sp"
-                            android:layout_marginBottom="4dp"
-                            android:layout_marginStart="4dp"/>
-                        
-                        <Spinner
-                            android:id="@+id/spinner_user_agent"
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:background="@drawable/spinner_background"
-                            android:padding="12dp"
-                            android:popupBackground="#2a2a2a"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="8dp">
-                        
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="DrmScheme"
-                            android:textColor="#808080"
-                            android:textSize="12sp"
-                            android:layout_marginBottom="4dp"
-                            android:layout_marginStart="4dp"/>
-                        
-                        <Spinner
-                            android:id="@+id/spinner_drm_scheme"
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:background="@drawable/spinner_background"
-                            android:padding="12dp"
-                            android:popupBackground="#2a2a2a"/>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <ImageButton
-                    android:id="@+id/button_play"
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/play_button_background"
-                    android:src="@android:drawable/ic_media_play"
-                    android:tint="#FFFFFF"
-                    android:contentDescription="Play Stream"/>
-
-            </LinearLayout>
-        </ScrollView>
-    </LinearLayout>
-
-    <!-- History Layout -->
-    <LinearLayout
-        android:id="@+id/history_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/bottom_navigation"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-    </RelativeLayout>
+</RelativeLayout>
