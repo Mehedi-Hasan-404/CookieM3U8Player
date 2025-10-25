@@ -1,34 +1,34 @@
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.android' [cite: 14]
 }
 
 android {
     namespace "com.example.cookiem3u8player"
-    compileSdk 34
+    compileSdk 34 [cite: 15]
 
-    // START OF FIX: Align Java and Kotlin JVM targets
+    // START OF FIX: Align Java and Kotlin JVM targets [cite: 16]
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_17 [cite: 16]
+        targetCompatibility JavaVersion.VERSION_17 [cite: 16]
     }
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '17' [cite: 16]
     }
-    // END OF FIX
+    // END OF FIX [cite: 17]
 
     defaultConfig {
         applicationId "com.example.cookiem3u8player"
         minSdk 21
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 1 [cite: 18]
+        versionName "1.0" [cite: 18]
     }
 
     buildTypes {
         release {
             minifyEnabled false
-        }
+        } [cite: 19]
     }
 }
 
@@ -37,13 +37,13 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+dependencies { [cite: 20]
+    implementation 'androidx.appcompat:appcompat:1.6.1' [cite: 20]
 
-    // ExoPlayer modules
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
+    // ExoPlayer modules [cite: 20]
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1' [cite: 20]
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1' [cite: 20]
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1' [cite: 21]
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.20"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.20" [cite: 21]
 }
