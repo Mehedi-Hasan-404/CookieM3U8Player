@@ -13,6 +13,7 @@ import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.Player
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -21,6 +22,8 @@ import android.content.Intent
 import android.net.Uri
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import org.json.JSONArray
+import org.json.JSONObject
 
 data class HistoryItem(
     val url: String,
@@ -29,7 +32,12 @@ data class HistoryItem(
 
 data class PlaylistEntry(
     var name: String = "",
-    var url: String = ""
+    var url: String = "",
+    var logo: String = "",
+    var cookie: String = "",
+    var referer: String = "",
+    var origin: String = "",
+    var userAgent: String = "Default"
 )
 
 class MainActivity : AppCompatActivity() {
@@ -61,6 +69,7 @@ class MainActivity : AppCompatActivity() {
     
     private val PREFS_NAME = "CookieM3U8PlayerPrefs"
     private val HISTORY_KEY = "history"
+    private val PLAYLIST_KEY = "playlist"
     private val REQUEST_CODE_PICK_FILE = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,11 +116,8 @@ class MainActivity : AppCompatActivity() {
         setupHistoryRecyclerView()
         
         // Setup playlist
+        loadPlaylist()
         setupPlaylistRecyclerView()
-        
-        // Sample data
-        urlEditText.setText("https://bldcmprod-cdn.toffeelive.com/cdn/live/sonysab_hd/playlist.m3u8")
-        cookieEditText.setText("Edge-Cache-Cookie=URLPrefix=aHR0cHM6Ly9ibGRjbXByb2QtY2RuLnRvZmZlZWxpdmUuY29t:Expires=1761572334:KeyName=prod_linear:Signature=eiX9W8NcWl19TxAcUDjRNX5w6jgFcueipQAGjfw-eV4k37n1sakXqAlUouKZvRkirj2462qa9PMKRC3HI9kyBQ")
 
         playButton.setOnClickListener {
             val url = urlEditText.text.toString().trim()
@@ -145,6 +151,14 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.button_select_file).setOnClickListener {
             openFilePicker()
         }
+        
+        // Playlist clear button
+        findViewById<Button>(R.id.button_clear_playlist).setOnClickListener {
+            showClearPlaylistDialog()
+        }
+        
+        // Initialize player with enhanced controls
+        initializePlayer()
     }
 
     private fun showHome() {
@@ -221,15 +235,18 @@ class MainActivity : AppCompatActivity() {
         playlistAdapter = PlaylistEntriesAdapter(playlistEntries,
             onItemClick = { entry ->
                 urlEditText.setText(entry.url)
+                if (entry.cookie.isNotEmpty()) cookieEditText.setText(entry.cookie)
+                if (entry.referer.isNotEmpty()) refererEditText.setText(entry.referer)
+                if (entry.origin.isNotEmpty()) originEditText.setText(entry.origin)
                 showHome()
                 addToHistory(entry.url)
                 startPlayback(
                     entry.url,
-                    cookieEditText.text.toString().trim(),
-                    refererEditText.text.toString().trim(),
-                    originEditText.text.toString().trim(),
+                    entry.cookie.ifEmpty { cookieEditText.text.toString().trim() },
+                    entry.referer.ifEmpty { refererEditText.text.toString().trim() },
+                    entry.origin.ifEmpty { originEditText.text.toString().trim() },
                     drmLicenseEditText.text.toString().trim(),
-                    userAgentSpinner.selectedItem.toString(),
+                    entry.userAgent,
                     drmSchemeSpinner.selectedItem.toString()
                 )
             }
@@ -252,8 +269,23 @@ class MainActivity : AppCompatActivity() {
                 if (name.isNotEmpty() && url.isNotEmpty()) {
                     playlistEntries.add(PlaylistEntry(name, url))
                     playlistAdapter.notifyItemInserted(playlistEntries.size - 1)
+                    savePlaylist()
                     Toast.makeText(this, "Added to playlist", Toast.LENGTH_SHORT).show()
                 }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    private fun showClearPlaylistDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Clear Playlist")
+            .setMessage("Are you sure you want to clear all playlist entries?")
+            .setPositiveButton("Clear") { _, _ ->
+                playlistEntries.clear()
+                playlistAdapter.notifyDataSetChanged()
+                savePlaylist()
+                Toast.makeText(this, "Playlist cleared", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -263,7 +295,7 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "*/*"
-            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("*/*", "audio/x-mpegurl", "application/vnd.apple.mpegurl"))
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("*/*", "audio/x-mpegurl", "application/vnd.apple.mpegurl", "application/json", "text/plain"))
         }
         startActivityForResult(intent, REQUEST_CODE_PICK_FILE)
     }
@@ -280,46 +312,145 @@ class MainActivity : AppCompatActivity() {
     private fun parsePlaylistFile(uri: Uri) {
         try {
             contentResolver.openInputStream(uri)?.use { inputStream ->
-                val reader = BufferedReader(InputStreamReader(inputStream))
-                var currentName = ""
-                var lineNumber = 0
+                val content = inputStream.bufferedReader().use { it.readText() }
                 
                 playlistEntries.clear()
                 
-                reader.forEachLine { line ->
-                    lineNumber++
-                    val trimmedLine = line.trim()
-                    
-                    when {
-                        trimmedLine.startsWith("#EXTINF:") -> {
-                            currentName = trimmedLine.substringAfter(",").trim()
-                            if (currentName.isEmpty()) {
-                                currentName = "Stream $lineNumber"
-                            }
-                        }
-                        trimmedLine.startsWith("http") -> {
-                            if (currentName.isEmpty()) {
-                                currentName = "Stream $lineNumber"
-                            }
-                            playlistEntries.add(PlaylistEntry(currentName, trimmedLine))
-                            currentName = ""
-                        }
-                        trimmedLine.isNotEmpty() && !trimmedLine.startsWith("#") -> {
-                            if (currentName.isEmpty()) {
-                                currentName = "Stream $lineNumber"
-                            }
-                            playlistEntries.add(PlaylistEntry(currentName, trimmedLine))
-                            currentName = ""
-                        }
-                    }
+                // Try to parse as JSON first
+                if (content.trim().startsWith("[") || content.trim().startsWith("{")) {
+                    parseJsonPlaylist(content)
+                } else {
+                    // Parse as M3U/M3U8
+                    parseM3UPlaylist(content)
                 }
                 
                 playlistAdapter.notifyDataSetChanged()
+                savePlaylist()
                 Toast.makeText(this, "Loaded ${playlistEntries.size} entries", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             Log.e("PlaylistParser", "Error parsing playlist", e)
-            Toast.makeText(this, "Error parsing playlist file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error parsing playlist: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    private fun parseJsonPlaylist(content: String) {
+        try {
+            val jsonArray = JSONArray(content)
+            for (i in 0 until jsonArray.length()) {
+                val jsonObject = jsonArray.getJSONObject(i)
+                val entry = PlaylistEntry(
+                    name = jsonObject.optString("name", "Channel $i"),
+                    url = jsonObject.optString("link", jsonObject.optString("url", "")),
+                    logo = jsonObject.optString("logo", ""),
+                    cookie = jsonObject.optString("cookie", ""),
+                    referer = jsonObject.optString("referer", ""),
+                    origin = jsonObject.optString("origin", ""),
+                    userAgent = jsonObject.optString("userAgent", "Default")
+                )
+                if (entry.url.isNotEmpty()) {
+                    playlistEntries.add(entry)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("PlaylistParser", "Error parsing JSON", e)
+        }
+    }
+    
+    private fun parseM3UPlaylist(content: String) {
+        val lines = content.lines()
+        var currentName = ""
+        var currentLogo = ""
+        var currentGroup = ""
+        var lineNumber = 0
+        
+        for (line in lines) {
+            lineNumber++
+            val trimmedLine = line.trim()
+            
+            when {
+                // Parse #EXTINF line
+                trimmedLine.startsWith("#EXTINF:") -> {
+                    // Extract tvg-logo
+                    val logoMatch = Regex("""tvg-logo="([^"]+)"""").find(trimmedLine)
+                    currentLogo = logoMatch?.groupValues?.get(1) ?: ""
+                    
+                    // Extract group-title
+                    val groupMatch = Regex("""group-title="([^"]+)"""").find(trimmedLine)
+                    currentGroup = groupMatch?.groupValues?.get(1) ?: ""
+                    
+                    // Extract name (after the last comma)
+                    val commaIndex = trimmedLine.lastIndexOf(',')
+                    if (commaIndex != -1) {
+                        currentName = trimmedLine.substring(commaIndex + 1).trim()
+                    }
+                    
+                    // If no name found, try to extract from the entire line
+                    if (currentName.isEmpty()) {
+                        currentName = "Channel $lineNumber"
+                    }
+                }
+                // Parse URL lines
+                trimmedLine.startsWith("http") || trimmedLine.startsWith("https") -> {
+                    if (currentName.isEmpty()) {
+                        currentName = "Stream $lineNumber"
+                    }
+                    
+                    // Parse URL for embedded headers (like |Referer=...)
+                    val urlParts = trimmedLine.split("|")
+                    val url = urlParts[0].trim()
+                    var referer = ""
+                    var cookie = ""
+                    var userAgent = "Default"
+                    
+                    // Parse additional parameters
+                    if (urlParts.size > 1) {
+                        for (i in 1 until urlParts.size) {
+                            val param = urlParts[i].trim()
+                            when {
+                                param.startsWith("Referer=", ignoreCase = true) -> {
+                                    referer = param.substring(8)
+                                }
+                                param.startsWith("cookie=", ignoreCase = true) -> {
+                                    cookie = param.substring(7)
+                                }
+                                param.startsWith("User-Agent=", ignoreCase = true) -> {
+                                    userAgent = "Chrome" // Default to Chrome for custom user agents
+                                }
+                            }
+                        }
+                    }
+                    
+                    val entry = PlaylistEntry(
+                        name = if (currentGroup.isNotEmpty()) "$currentGroup: $currentName" else currentName,
+                        url = url,
+                        logo = currentLogo,
+                        referer = referer,
+                        cookie = cookie,
+                        userAgent = userAgent
+                    )
+                    playlistEntries.add(entry)
+                    
+                    // Reset for next entry
+                    currentName = ""
+                    currentLogo = ""
+                }
+                // Parse #KODIPROP lines for headers
+                trimmedLine.startsWith("#KODIPROP:") -> {
+                    // These are typically for DRM content, can be extended later
+                }
+                // Parse #EXTVLCOPT lines
+                trimmedLine.startsWith("#EXTVLCOPT:") -> {
+                    val optValue = trimmedLine.substring(11).trim()
+                    if (optValue.startsWith("http-user-agent=", ignoreCase = true)) {
+                        // Store user agent for next entry
+                    }
+                }
+                // Skip other comments and empty lines
+                trimmedLine.startsWith("#") || trimmedLine.isEmpty() -> {
+                    // Skip
+                }
+            }
         }
     }
     
@@ -348,11 +479,46 @@ class MainActivity : AppCompatActivity() {
             history.addAll(loadedHistory)
         }
     }
+    
+    private fun savePlaylist() {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val json = Gson().toJson(playlistEntries)
+        prefs.edit().putString(PLAYLIST_KEY, json).apply()
+    }
+    
+    private fun loadPlaylist() {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val json = prefs.getString(PLAYLIST_KEY, null)
+        if (json != null) {
+            val type = object : TypeToken<MutableList<PlaylistEntry>>() {}.type
+            val loadedPlaylist: MutableList<PlaylistEntry> = Gson().fromJson(json, type)
+            playlistEntries.addAll(loadedPlaylist)
+        }
+    }
 
     private fun initializePlayer() {
         if (player == null) {
-            player = ExoPlayer.Builder(this).build()
+            player = ExoPlayer.Builder(this).build().apply {
+                // Add playback state listener
+                addListener(object : Player.Listener {
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        when (playbackState) {
+                            Player.STATE_BUFFERING -> {
+                                Log.d("Player", "Buffering...")
+                            }
+                            Player.STATE_READY -> {
+                                Log.d("Player", "Ready to play")
+                            }
+                            Player.STATE_ENDED -> {
+                                Log.d("Player", "Playback ended")
+                            }
+                        }
+                    }
+                })
+            }
             playerView.player = player
+            playerView.controllerShowTimeoutMs = 5000
+            playerView.controllerHideOnTouch = true
         }
     }
 
@@ -407,6 +573,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        if (isFinishing) {
+            releasePlayer()
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
         releasePlayer()
     }
 }
