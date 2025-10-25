@@ -25,7 +25,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Network Stream (Video) Player"
+                android:text="CookieM3U8 Player"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -53,14 +53,16 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Video Player -->
+                <!-- Video Player with Enhanced Controls -->
                 <com.google.android.exoplayer2.ui.StyledPlayerView
                     android:id="@+id/player_view"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="250dp"
                     android:background="#000000"
                     app:resize_mode="fit"
                     app:use_controller="true"
+                    app:show_buffering="when_playing"
+                    app:controller_layout_id="@layout/exo_player_control_view"
                     app:surface_type="surface_view"
                     android:layout_marginBottom="16dp"/>
 
@@ -81,7 +83,7 @@
                     android:id="@+id/edit_text_cookie"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Cookie Value"
+                    android:hint="Cookie Value (Optional)"
                     android:textColorHint="#808080"
                     android:textColor="#FFFFFF"
                     android:inputType="textMultiLine"
@@ -93,7 +95,7 @@
                     android:id="@+id/edit_text_referer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Referer Value"
+                    android:hint="Referer Value (Optional)"
                     android:textColorHint="#808080"
                     android:textColor="#FFFFFF"
                     android:inputType="textUri"
@@ -105,7 +107,7 @@
                     android:id="@+id/edit_text_origin"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Origin Value"
+                    android:hint="Origin Value (Optional)"
                     android:textColorHint="#808080"
                     android:textColor="#FFFFFF"
                     android:inputType="textUri"
@@ -117,7 +119,7 @@
                     android:id="@+id/edit_text_drm_license"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="DRM License URL"
+                    android:hint="DRM License URL (Optional)"
                     android:textColorHint="#808080"
                     android:textColor="#FFFFFF"
                     android:inputType="textUri"
@@ -265,9 +267,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="4dp"
                 android:text="Add URL"
                 android:textColor="#FFFFFF"
+                android:textSize="12sp"
                 android:backgroundTint="#4FC3F7"/>
 
             <Button
@@ -275,10 +278,23 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
                 android:text="Select File"
                 android:textColor="#FFFFFF"
+                android:textSize="12sp"
                 android:backgroundTint="#4FC3F7"/>
+
+            <Button
+                android:id="@+id/button_clear_playlist"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="Clear"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:backgroundTint="#FF5252"/>
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
