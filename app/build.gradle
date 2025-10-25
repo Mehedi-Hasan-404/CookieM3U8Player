@@ -1,46 +1,54 @@
 plugins {
     id 'com.android.application'
-    id 'kotlin-android' 
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
-    namespace "com.example.cookiem3u8player"
+    namespace 'com.example.cookiem3u8player'
     compileSdk 34
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = '17'
-    }
 
     defaultConfig {
         applicationId "com.example.cookiem3u8player"
-        minSdk 21
+        minSdk 24
         targetSdk 34
         versionCode 1
         versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
     }
 }
 
-// FIX: The redundant 'repositories' block has been removed. 
-// Repository configuration is now handled exclusively by settings.gradle.
-
-
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
 
-    // ExoPlayer modules
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
+    // Core AndroidX and Kotlin dependencies
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+
+    // FIX: ConstraintLayout dependency is REQUIRED for the activity_main.xml layout
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    
+    // ExoPlayer dependencies (for HLS playback)
+    implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
     implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.20"
+    // Testing dependencies
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
