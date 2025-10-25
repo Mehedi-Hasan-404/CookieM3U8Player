@@ -1,34 +1,33 @@
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android' [cite: 14]
+    // FIX: Changed 'org.jetbrains.kotlin.android' to the shorter 'kotlin-android' form
+    id 'kotlin-android' 
 }
 
 android {
     namespace "com.example.cookiem3u8player"
-    compileSdk 34 [cite: 15]
+    compileSdk 34
 
-    // START OF FIX: Align Java and Kotlin JVM targets [cite: 16]
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17 [cite: 16]
-        targetCompatibility JavaVersion.VERSION_17 [cite: 16]
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '17' [cite: 16]
+        jvmTarget = '17'
     }
-    // END OF FIX [cite: 17]
 
     defaultConfig {
         applicationId "com.example.cookiem3u8player"
         minSdk 21
         targetSdk 34
-        versionCode 1 [cite: 18]
-        versionName "1.0" [cite: 18]
+        versionCode 1
+        versionName "1.0"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-        } [cite: 19]
+        }
     }
 }
 
@@ -37,13 +36,13 @@ repositories {
     mavenCentral()
 }
 
-dependencies { [cite: 20]
-    implementation 'androidx.appcompat:appcompat:1.6.1' [cite: 20]
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
 
-    // ExoPlayer modules [cite: 20]
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1' [cite: 20]
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1' [cite: 20]
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1' [cite: 21]
+    // ExoPlayer modules
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.20" [cite: 21]
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.20"
 }
