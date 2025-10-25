@@ -1,32 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="#f5f5f5"
+    tools:context=".MainActivity">
 
-    <EditText
-        android:id="@+id/urlEdit"
-        android:hint="M3U8 URL"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <EditText
-        android:id="@+id/cookieEdit"
-        android:hint="Cookie header"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/playButton"
-        android:text="▶ Play Stream"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <com.google.android.exoplayer2.ui.PlayerView
-        android:id="@+id/playerView"
-        android:layout_width="match_parent"
+    <!-- 1. Video Player (Prominently displayed at the top) -->
+    <com.google.android.exoplayer2.ui.StyledPlayerView
+        android:id="@+id/player_view"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
-</LinearLayout>
+        android:background="#000000"
+        app:layout_constraintDimensionRatio="16:9" 
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:resize_mode="fit"
+        app:use_controller="true"
+        app:surface_type="surface_view"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"/>
+
+    <!-- 2. Controls Area (Inputs and Button) -->
+    <LinearLayout
+        android:id="@+id/controls_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintTop_toBottomOf="@id/player_view"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Stream URL Input -->
+        <EditText
+            android:id="@+id/edit_text_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter M3U8 Stream URL"
+            android:inputType="textUri"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp"
+            android:textSize="14sp"
+            android:background="@android:drawable/editbox_background"/>
+
+        <!-- Cookie Input (Optional) -->
+        <EditText
+            android:id="@+id/edit_text_cookie"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Optional: Enter Cookie Header (Key=Value)"
+            android:inputType="textMultiLine"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:textSize="14sp"
+            android:background="@android:drawable/editbox_background"/>
+
+        <!-- Play Button -->
+        <Button
+            android:id="@+id/button_play"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Play Stream"
+            android:textStyle="bold"
+            android:padding="12dp"/>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
