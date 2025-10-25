@@ -7,6 +7,16 @@ android {
     namespace "com.example.cookiem3u8player"
     compileSdk 34
 
+    // START OF FIX: Align Java and Kotlin JVM targets
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    // END OF FIX
+
     defaultConfig {
         applicationId "com.example.cookiem3u8player"
         minSdk 21
