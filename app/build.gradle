@@ -1,0 +1,29 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace "com.example.cookiem3u8player" // <-- ADD THIS LINE
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.cookiem3u8player"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.exoplayer:exoplayer:2.20.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.20"
+}
