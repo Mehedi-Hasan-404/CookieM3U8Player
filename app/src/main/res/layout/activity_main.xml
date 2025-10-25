@@ -1,76 +1,324 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#f5f5f5"
-    tools:context=".MainActivity">
+    android:background="#212121">
 
-    <!-- 1. Video Player (Prominently displayed at the top) -->
-    <com.google.android.exoplayer2.ui.StyledPlayerView
-        android:id="@+id/player_view"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#000000"
-        app:layout_constraintDimensionRatio="16:9" 
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:resize_mode="fit"
-        app:use_controller="true"
-        app:surface_type="surface_view"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"/>
-
-    <!-- 2. Controls Area (Inputs and Button) -->
+    <!-- Home Layout -->
     <LinearLayout
-        android:id="@+id/controls_container"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:id="@+id/home_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_navigation"
         android:orientation="vertical"
-        android:padding="16dp"
-        app:layout_constraintTop_toBottomOf="@id/player_view"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:visibility="visible">
 
-        <!-- Stream URL Input -->
-        <EditText
-            android:id="@+id/edit_text_url"
+        <!-- Header -->
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter M3U8 Stream URL"
-            android:inputType="textUri"
-            android:padding="12dp"
-            android:layout_marginBottom="8dp"
-            android:textSize="14sp"
-            android:background="@android:drawable/editbox_background"/>
+            android:padding="16dp"
+            android:background="#2a2a2a">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Network Stream (Video) Player"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_centerVertical="true"/>
+                
+            <ImageButton
+                android:id="@+id/button_save_playlist"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_save"
+                android:tint="#FFFFFF"
+                android:contentDescription="Save to Playlist"/>
+        </RelativeLayout>
 
-        <!-- Cookie Input (Optional) -->
-        <EditText
-            android:id="@+id/edit_text_cookie"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Optional: Enter Cookie Header (Key=Value)"
-            android:inputType="textMultiLine"
-            android:padding="12dp"
-            android:layout_marginBottom="16dp"
-            android:textSize="14sp"
-            android:background="@android:drawable/editbox_background"/>
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
-        <!-- Play Button -->
-        <Button
-            android:id="@+id/button_play"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Play Stream"
-            android:textStyle="bold"
-            android:padding="12dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
+                <!-- Video Player -->
+                <com.google.android.exoplayer2.ui.StyledPlayerView
+                    android:id="@+id/player_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:background="#000000"
+                    app:resize_mode="fit"
+                    app:use_controller="true"
+                    app:surface_type="surface_view"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- Media Stream URL -->
+                <EditText
+                    android:id="@+id/edit_text_url"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Media Stream URL"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textUri"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <!-- Cookie Value -->
+                <EditText
+                    android:id="@+id/edit_text_cookie"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Cookie Value"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textMultiLine"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <!-- Referer Value -->
+                <EditText
+                    android:id="@+id/edit_text_referer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Referer Value"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textUri"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <!-- Origin Value -->
+                <EditText
+                    android:id="@+id/edit_text_origin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Origin Value"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textUri"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <!-- DRM License URL -->
+                <EditText
+                    android:id="@+id/edit_text_drm_license"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="DRM License URL"
+                    android:textColorHint="#808080"
+                    android:textColor="#FFFFFF"
+                    android:inputType="textUri"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/edit_text_background"/>
+
+                <!-- UserAgent and DrmScheme Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- UserAgent Spinner -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="UserAgent"
+                            android:textColor="#808080"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="4dp"
+                            android:layout_marginStart="4dp"/>
+                        
+                        <Spinner
+                            android:id="@+id/spinner_user_agent"
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            android:background="@drawable/spinner_background"
+                            android:padding="12dp"
+                            android:popupBackground="#2a2a2a"/>
+                    </LinearLayout>
+
+                    <!-- DrmScheme Spinner -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DrmScheme"
+                            android:textColor="#808080"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="4dp"
+                            android:layout_marginStart="4dp"/>
+                        
+                        <Spinner
+                            android:id="@+id/spinner_drm_scheme"
+                            android:layout_width="match_parent"
+                            android:layout_height="50dp"
+                            android:background="@drawable/spinner_background"
+                            android:padding="12dp"
+                            android:popupBackground="#2a2a2a"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Play Button -->
+                <ImageButton
+                    android:id="@+id/button_play"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/play_button_background"
+                    android:src="@android:drawable/ic_media_play"
+                    android:tint="#FFFFFF"
+                    android:contentDescription="Play Stream"/>
+
+            </LinearLayout>
+        </ScrollView>
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Playlist Layout -->
+    <LinearLayout
+        android:id="@+id/playlist_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_navigation"
+        android:orientation="vertical"
+        android:visibility="gone">
 
+        <!-- Playlist Header -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:background="#2a2a2a">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Playlist"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_centerVertical="true"/>
+        </RelativeLayout>
+
+        <!-- Playlist RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/playlist_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp"/>
+    </LinearLayout>
+
+    <!-- Bottom Navigation -->
+    <LinearLayout
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#2a2a2a"
+        android:padding="8dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            
+            <ImageButton
+                android:id="@+id/nav_home"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_view"
+                android:tint="#4FC3F7"
+                android:contentDescription="Home"/>
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home"
+                android:textColor="#4FC3F7"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            
+            <ImageButton
+                android:id="@+id/nav_playlist"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_sort_by_size"
+                android:tint="#808080"
+                android:contentDescription="Playlist"/>
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Playlist"
+                android:textColor="#808080"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            
+            <ImageButton
+                android:id="@+id/nav_settings"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:tint="#808080"
+                android:contentDescription="Settings"/>
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Settings"
+                android:textColor="#808080"
+                android:textSize="12sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>
