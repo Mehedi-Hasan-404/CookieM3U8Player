@@ -22,13 +22,18 @@ android {
     }
 }
 
+repositories {
+    google()
+    mavenCentral()
+}
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
 
     // ExoPlayer modules
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.20.1'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.20.1'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.20.1'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.20.2'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.20.2'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.20.2'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.20"
 }
