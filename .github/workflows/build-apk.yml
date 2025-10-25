@@ -1,4 +1,4 @@
-name: Build APK
+name: Build CookieM3U8Player APK
 
 on:
   push:
@@ -10,24 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Checkout the repository
     - name: Checkout repo
       uses: actions/checkout@v3
 
-    - name: Set up JDK 17
+    # 2. Set up Java (JDK 17)
+    - name: Set up JDK
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
 
+    # 3. Set up Android SDK
     - name: Set up Android SDK
       uses: android-actions/setup-android@v2
       with:
         api-level: 34
         build-tools-version: '34.0.0'
 
+    # 4. Make gradlew executable
+    - name: Make gradlew executable
+      run: chmod +x gradlew
+
+    # 5. Build APK
     - name: Build APK
       run: ./gradlew assembleDebug
 
+    # 6. Upload APK as artifact
     - name: Upload APK
       uses: actions/upload-artifact@v3
       with:
