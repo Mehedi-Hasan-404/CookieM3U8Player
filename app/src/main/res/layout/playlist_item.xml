@@ -5,14 +5,17 @@
     android:layout_height="wrap_content"
     android:padding="16dp"
     android:background="@drawable/playlist_item_background"
-    android:layout_marginBottom="8dp">
+    android:layout_marginBottom="8dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp">
 
     <LinearLayout
         android:id="@+id/text_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toStartOf="@id/edit_button"
-        android:orientation="vertical">
+        android:layout_toStartOf="@id/playlist_item_delete"
+        android:orientation="vertical"
+        android:layout_centerVertical="true">
 
         <TextView
             android:id="@+id/playlist_item_name"
@@ -36,24 +39,26 @@
     </LinearLayout>
 
     <ImageButton
+        android:id="@+id/playlist_item_delete"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_toStartOf="@id/playlist_item_edit"
+        android:layout_centerVertical="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_delete"
+        android:tint="#FF5252"
+        android:contentDescription="Delete"/>
+
+    <ImageButton
         android:id="@+id/playlist_item_edit"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
         android:layout_marginStart="8dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@android:drawable/ic_menu_edit"
         android:tint="#FFFFFF"
         android:contentDescription="Edit"/>
-
-    <ImageButton
-        android:id="@+id/playlist_item_delete"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_toStartOf="@id/playlist_item_edit"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_delete"
-        android:tint="#FF5252"
-        android:contentDescription="Delete"/>
 
 </RelativeLayout>
