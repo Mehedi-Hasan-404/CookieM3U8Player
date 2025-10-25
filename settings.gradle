@@ -1,2 +1,22 @@
+// settings.gradle
+
+pluginManagement {
+    // FIX: Define repositories for finding Gradle plugins (like the Android Gradle Plugin)
+    repositories {
+        gradlePluginPortal()
+        google() // Essential for finding com.android.application
+        mavenCentral()
+    }
+}
+
+// Ensure repositories for dependencies are also defined
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
 rootProject.name = "CookieM3U8Player"
-include(":app")
+include ':app'
