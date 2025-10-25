@@ -13,24 +13,23 @@ import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.google.android.exoplayer2.util.Util
-import com.google.android.exoplayer2.drm.DefaultDrmSessionManager
-import com.google.android.exoplayer2.drm.HttpMediaDrmCallback
-import com.google.android.exoplayer2.drm.FrameworkMediaDrm
-import com.google.android.exoplayer2.C
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
-data class PlaylistItem(
+data class HistoryItem(
+    val url: String,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class PlaylistEntry(
     var name: String = "",
-    var url: String = "",
-    var cookie: String = "",
-    var referer: String = "",
-    var origin: String = "",
-    var drmLicense: String = "",
-    var userAgent: String = "Default",
-    var drmScheme: String = "clearkey"
+    var url: String = ""
 )
 
 class MainActivity : AppCompatActivity() {
@@ -47,13 +46,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var playButton: ImageButton
     
     private lateinit var homeLayout: LinearLayout
+    private lateinit var historyLayout: LinearLayout
     private lateinit var playlistLayout: LinearLayout
-    private lateinit var playlistRecyclerView: RecyclerView
-    private lateinit var playlistAdapter: PlaylistAdapter
+    private lateinit var settingsLayout: LinearLayout
     
-    private val playlist = mutableListOf<PlaylistItem>()
+    private lateinit var historyRecyclerView: RecyclerView
+    private lateinit var playlistRecyclerView: RecyclerView
+    
+    private lateinit var historyAdapter: HistoryAdapter
+    private lateinit var playlistAdapter: PlaylistEntriesAdapter
+    
+    private val history = mutableListOf<HistoryItem>()
+    private val playlistEntries = mutableListOf<PlaylistEntry>()
+    
     private val PREFS_NAME = "CookieM3U8PlayerPrefs"
-    private val PLAYLIST_KEY = "playlist"
+    private val HISTORY_KEY = "history"
+    private val REQUEST_CODE_PICK_FILE = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,18 +79,21 @@ class MainActivity : AppCompatActivity() {
         playButton = findViewById(R.id.button_play)
         
         homeLayout = findViewById(R.id.home_layout)
+        historyLayout = findViewById(R.id.history_layout)
         playlistLayout = findViewById(R.id.playlist_layout)
+        settingsLayout = findViewById(R.id.settings_layout)
+        
+        historyRecyclerView = findViewById(R.id.history_recycler_view)
         playlistRecyclerView = findViewById(R.id.playlist_recycler_view)
         
         // Setup bottom navigation
-        findViewById<ImageButton>(R.id.nav_home).setOnClickListener { showHome() }
-        findViewById<ImageButton>(R.id.nav_playlist).setOnClickListener { showPlaylist() }
-        findViewById<ImageButton>(R.id.nav_settings).setOnClickListener { 
-            Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show()
-        }
+        findViewById<LinearLayout>(R.id.nav_home).setOnClickListener { showHome() }
+        findViewById<LinearLayout>(R.id.nav_history).setOnClickListener { showHistory() }
+        findViewById<LinearLayout>(R.id.nav_playlist).setOnClickListener { showPlaylist() }
+        findViewById<LinearLayout>(R.id.nav_settings).setOnClickListener { showSettings() }
         
         // Setup UserAgent spinner
-        val userAgents = arrayOf("Default", "Chrome", "Firefox", "Safari", "Edge", "Custom")
+        val userAgents = arrayOf("Default", "Chrome", "Firefox", "Safari", "Edge")
         val userAgentAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, userAgents)
         userAgentSpinner.adapter = userAgentAdapter
         
@@ -91,8 +102,11 @@ class MainActivity : AppCompatActivity() {
         val drmSchemeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, drmSchemes)
         drmSchemeSpinner.adapter = drmSchemeAdapter
         
+        // Setup history
+        loadHistory()
+        setupHistoryRecyclerView()
+        
         // Setup playlist
-        loadPlaylist()
         setupPlaylistRecyclerView()
         
         // Sample data
@@ -104,6 +118,7 @@ class MainActivity : AppCompatActivity() {
             if (url.isEmpty()) {
                 Toast.makeText(this, "Please enter a stream URL", Toast.LENGTH_SHORT).show()
             } else {
+                addToHistory(url)
                 startPlayback(
                     url,
                     cookieEditText.text.toString().trim(),
@@ -116,78 +131,127 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        // Add to playlist button
-        findViewById<ImageButton>(R.id.button_save_playlist).setOnClickListener {
-            showSavePlaylistDialog()
+        // History icon button
+        findViewById<ImageButton>(R.id.button_history).setOnClickListener {
+            showHistory()
+        }
+        
+        // Playlist add URL button
+        findViewById<Button>(R.id.button_add_url).setOnClickListener {
+            showAddUrlDialog()
+        }
+        
+        // Playlist select file button
+        findViewById<Button>(R.id.button_select_file).setOnClickListener {
+            openFilePicker()
         }
     }
 
     private fun showHome() {
         homeLayout.visibility = LinearLayout.VISIBLE
+        historyLayout.visibility = LinearLayout.GONE
         playlistLayout.visibility = LinearLayout.GONE
+        settingsLayout.visibility = LinearLayout.GONE
+        updateNavBar(0)
+    }
+    
+    private fun showHistory() {
+        homeLayout.visibility = LinearLayout.GONE
+        historyLayout.visibility = LinearLayout.VISIBLE
+        playlistLayout.visibility = LinearLayout.GONE
+        settingsLayout.visibility = LinearLayout.GONE
+        updateNavBar(1)
     }
     
     private fun showPlaylist() {
         homeLayout.visibility = LinearLayout.GONE
+        historyLayout.visibility = LinearLayout.GONE
         playlistLayout.visibility = LinearLayout.VISIBLE
+        settingsLayout.visibility = LinearLayout.GONE
+        updateNavBar(2)
+    }
+    
+    private fun showSettings() {
+        homeLayout.visibility = LinearLayout.GONE
+        historyLayout.visibility = LinearLayout.GONE
+        playlistLayout.visibility = LinearLayout.GONE
+        settingsLayout.visibility = LinearLayout.VISIBLE
+        updateNavBar(3)
+        Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun updateNavBar(activeIndex: Int) {
+        val navItems = listOf(
+            Triple(R.id.nav_home_icon, R.id.nav_home_text, 0),
+            Triple(R.id.nav_history_icon, R.id.nav_history_text, 1),
+            Triple(R.id.nav_playlist_icon, R.id.nav_playlist_text, 2),
+            Triple(R.id.nav_settings_icon, R.id.nav_settings_text, 3)
+        )
+        
+        navItems.forEach { (iconId, textId, index) ->
+            val icon = findViewById<ImageView>(iconId)
+            val text = findViewById<TextView>(textId)
+            if (index == activeIndex) {
+                icon.setColorFilter(resources.getColor(android.R.color.holo_blue_light, null))
+                text.setTextColor(resources.getColor(android.R.color.holo_blue_light, null))
+            } else {
+                icon.setColorFilter(resources.getColor(android.R.color.darker_gray, null))
+                text.setTextColor(resources.getColor(android.R.color.darker_gray, null))
+            }
+        }
+    }
+    
+    private fun setupHistoryRecyclerView() {
+        historyAdapter = HistoryAdapter(history,
+            onItemClick = { item ->
+                urlEditText.setText(item.url)
+                showHome()
+            },
+            onItemDelete = { position ->
+                history.removeAt(position)
+                historyAdapter.notifyItemRemoved(position)
+                saveHistory()
+            }
+        )
+        historyRecyclerView.layoutManager = LinearLayoutManager(this)
+        historyRecyclerView.adapter = historyAdapter
     }
     
     private fun setupPlaylistRecyclerView() {
-        playlistAdapter = PlaylistAdapter(playlist, 
-            onItemClick = { item ->
-                // Load item into player
-                urlEditText.setText(item.url)
-                cookieEditText.setText(item.cookie)
-                refererEditText.setText(item.referer)
-                originEditText.setText(item.origin)
-                drmLicenseEditText.setText(item.drmLicense)
-                
-                val userAgentPosition = (userAgentSpinner.adapter as ArrayAdapter<String>).getPosition(item.userAgent)
-                userAgentSpinner.setSelection(userAgentPosition)
-                
-                val drmSchemePosition = (drmSchemeSpinner.adapter as ArrayAdapter<String>).getPosition(item.drmScheme)
-                drmSchemeSpinner.setSelection(drmSchemePosition)
-                
+        playlistAdapter = PlaylistEntriesAdapter(playlistEntries,
+            onItemClick = { entry ->
+                urlEditText.setText(entry.url)
                 showHome()
-                startPlayback(item.url, item.cookie, item.referer, item.origin, item.drmLicense, item.userAgent, item.drmScheme)
-            },
-            onItemEdit = { item, position ->
-                showEditPlaylistDialog(item, position)
-            },
-            onItemDelete = { position ->
-                playlist.removeAt(position)
-                playlistAdapter.notifyItemRemoved(position)
-                savePlaylist()
-                Toast.makeText(this, "Item deleted", Toast.LENGTH_SHORT).show()
+                addToHistory(entry.url)
+                startPlayback(
+                    entry.url,
+                    cookieEditText.text.toString().trim(),
+                    refererEditText.text.toString().trim(),
+                    originEditText.text.toString().trim(),
+                    drmLicenseEditText.text.toString().trim(),
+                    userAgentSpinner.selectedItem.toString(),
+                    drmSchemeSpinner.selectedItem.toString()
+                )
             }
         )
         playlistRecyclerView.layoutManager = LinearLayoutManager(this)
         playlistRecyclerView.adapter = playlistAdapter
     }
     
-    private fun showSavePlaylistDialog() {
-        val input = EditText(this)
-        input.hint = "Enter playlist name"
+    private fun showAddUrlDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_url, null)
+        val nameInput = dialogView.findViewById<EditText>(R.id.edit_name)
+        val urlInput = dialogView.findViewById<EditText>(R.id.edit_url)
         
         AlertDialog.Builder(this)
-            .setTitle("Save to Playlist")
-            .setView(input)
-            .setPositiveButton("Save") { _, _ ->
-                val name = input.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    val item = PlaylistItem(
-                        name = name,
-                        url = urlEditText.text.toString().trim(),
-                        cookie = cookieEditText.text.toString().trim(),
-                        referer = refererEditText.text.toString().trim(),
-                        origin = originEditText.text.toString().trim(),
-                        drmLicense = drmLicenseEditText.text.toString().trim(),
-                        userAgent = userAgentSpinner.selectedItem.toString(),
-                        drmScheme = drmSchemeSpinner.selectedItem.toString()
-                    )
-                    playlist.add(item)
-                    playlistAdapter.notifyItemInserted(playlist.size - 1)
-                    savePlaylist()
+            .setTitle("Add URL")
+            .setView(dialogView)
+            .setPositiveButton("Add") { _, _ ->
+                val name = nameInput.text.toString().trim()
+                val url = urlInput.text.toString().trim()
+                if (name.isNotEmpty() && url.isNotEmpty()) {
+                    playlistEntries.add(PlaylistEntry(name, url))
+                    playlistAdapter.notifyItemInserted(playlistEntries.size - 1)
                     Toast.makeText(this, "Added to playlist", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -195,40 +259,93 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
     
-    private fun showEditPlaylistDialog(item: PlaylistItem, position: Int) {
-        val input = EditText(this)
-        input.setText(item.name)
-        input.hint = "Enter playlist name"
-        
-        AlertDialog.Builder(this)
-            .setTitle("Edit Playlist Item")
-            .setView(input)
-            .setPositiveButton("Save") { _, _ ->
-                val name = input.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    item.name = name
-                    playlistAdapter.notifyItemChanged(position)
-                    savePlaylist()
-                    Toast.makeText(this, "Updated", Toast.LENGTH_SHORT).show()
-                }
+    private fun openFilePicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("*/*", "audio/x-mpegurl", "application/vnd.apple.mpegurl"))
+        }
+        startActivityForResult(intent, REQUEST_CODE_PICK_FILE)
+    }
+    
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_PICK_FILE && resultCode == RESULT_OK) {
+            data?.data?.let { uri ->
+                parsePlaylistFile(uri)
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
     }
     
-    private fun savePlaylist() {
-        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val json = Gson().toJson(playlist)
-        prefs.edit().putString(PLAYLIST_KEY, json).apply()
+    private fun parsePlaylistFile(uri: Uri) {
+        try {
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                val reader = BufferedReader(InputStreamReader(inputStream))
+                var currentName = ""
+                var lineNumber = 0
+                
+                playlistEntries.clear()
+                
+                reader.forEachLine { line ->
+                    lineNumber++
+                    val trimmedLine = line.trim()
+                    
+                    when {
+                        trimmedLine.startsWith("#EXTINF:") -> {
+                            currentName = trimmedLine.substringAfter(",").trim()
+                            if (currentName.isEmpty()) {
+                                currentName = "Stream $lineNumber"
+                            }
+                        }
+                        trimmedLine.startsWith("http") -> {
+                            if (currentName.isEmpty()) {
+                                currentName = "Stream $lineNumber"
+                            }
+                            playlistEntries.add(PlaylistEntry(currentName, trimmedLine))
+                            currentName = ""
+                        }
+                        trimmedLine.isNotEmpty() && !trimmedLine.startsWith("#") -> {
+                            if (currentName.isEmpty()) {
+                                currentName = "Stream $lineNumber"
+                            }
+                            playlistEntries.add(PlaylistEntry(currentName, trimmedLine))
+                            currentName = ""
+                        }
+                    }
+                }
+                
+                playlistAdapter.notifyDataSetChanged()
+                Toast.makeText(this, "Loaded ${playlistEntries.size} entries", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Log.e("PlaylistParser", "Error parsing playlist", e)
+            Toast.makeText(this, "Error parsing playlist file", Toast.LENGTH_SHORT).show()
+        }
     }
     
-    private fun loadPlaylist() {
+    private fun addToHistory(url: String) {
+        history.removeAll { it.url == url }
+        history.add(0, HistoryItem(url))
+        if (history.size > 50) {
+            history.removeAt(history.size - 1)
+        }
+        historyAdapter.notifyDataSetChanged()
+        saveHistory()
+    }
+    
+    private fun saveHistory() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val json = prefs.getString(PLAYLIST_KEY, null)
+        val json = Gson().toJson(history)
+        prefs.edit().putString(HISTORY_KEY, json).apply()
+    }
+    
+    private fun loadHistory() {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val json = prefs.getString(HISTORY_KEY, null)
         if (json != null) {
-            val type = object : TypeToken<MutableList<PlaylistItem>>() {}.type
-            val loadedPlaylist: MutableList<PlaylistItem> = Gson().fromJson(json, type)
-            playlist.addAll(loadedPlaylist)
+            val type = object : TypeToken<MutableList<HistoryItem>>() {}.type
+            val loadedHistory: MutableList<HistoryItem> = Gson().fromJson(json, type)
+            history.addAll(loadedHistory)
         }
     }
 
@@ -252,18 +369,11 @@ class MainActivity : AppCompatActivity() {
         player?.stop()
         player?.clearMediaItems()
         
-        // Create HTTP Data Source Factory with headers
         val requestProperties = mutableMapOf<String, String>()
         
-        if (cookie.isNotEmpty()) {
-            requestProperties["Cookie"] = cookie
-        }
-        if (referer.isNotEmpty()) {
-            requestProperties["Referer"] = referer
-        }
-        if (origin.isNotEmpty()) {
-            requestProperties["Origin"] = origin
-        }
+        if (cookie.isNotEmpty()) requestProperties["Cookie"] = cookie
+        if (referer.isNotEmpty()) requestProperties["Referer"] = referer
+        if (origin.isNotEmpty()) requestProperties["Origin"] = origin
         
         val userAgentString = when (userAgent) {
             "Chrome" -> "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -273,31 +383,12 @@ class MainActivity : AppCompatActivity() {
             else -> Util.getUserAgent(this, "CookieM3U8Player")
         }
         
-        var httpDataSourceFactory: HttpDataSource.Factory = DefaultHttpDataSource.Factory()
+        val httpDataSourceFactory: HttpDataSource.Factory = DefaultHttpDataSource.Factory()
             .setUserAgent(userAgentString)
             .setAllowCrossProtocolRedirects(true)
             .setDefaultRequestProperties(requestProperties)
 
-        val mediaItem = MediaItem.Builder()
-            .setUri(streamUrl)
-            .apply {
-                if (drmLicense.isNotEmpty()) {
-                    val drmSchemeUuid = when (drmScheme.lowercase()) {
-                        "widevine" -> C.WIDEVINE_UUID
-                        "playready" -> C.PLAYREADY_UUID
-                        "clearkey" -> C.CLEARKEY_UUID
-                        else -> C.CLEARKEY_UUID
-                    }
-                    
-                    setDrmConfiguration(
-                        MediaItem.DrmConfiguration.Builder(drmSchemeUuid)
-                            .setLicenseUri(drmLicense)
-                            .build()
-                    )
-                }
-            }
-            .build()
-
+        val mediaItem = MediaItem.fromUri(streamUrl)
         val hlsMediaSource = HlsMediaSource.Factory(httpDataSourceFactory)
             .createMediaSource(mediaItem)
 
@@ -305,7 +396,7 @@ class MainActivity : AppCompatActivity() {
         player?.playWhenReady = true
         player?.prepare()
         
-        Log.d("CookieM3U8Player", "Playing stream with headers: $requestProperties")
+        Log.d("CookieM3U8Player", "Playing: $streamUrl")
         Toast.makeText(this, "Loading stream...", Toast.LENGTH_SHORT).show()
     }
 
