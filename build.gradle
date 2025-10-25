@@ -1,25 +1,12 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
-    // FIX: Changed from deprecated 'buildscript' block to modern 'plugins' block
     // Android Gradle Plugin version
     id 'com.android.application' version '8.1.0' apply false
     id 'com.android.library' version '8.1.0' apply false
     
-    // Kotlin plugin version (matches your previous version '1.8.20')
+    // Kotlin plugin version
     id 'org.jetbrains.kotlin.android' version '1.8.20' apply false
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-// Remove the task 'clean' if your settings.gradle already includes it.
-// If your project doesn't have a settings.gradle, add a clean task here:
-/*
-task clean(type: Delete) {
-    delete rootProject.buildDir
-}
-*/
+// FIX: Removed the redundant 'allprojects' block. 
+// Dependency repositories are now correctly defined ONLY in settings.gradle.
