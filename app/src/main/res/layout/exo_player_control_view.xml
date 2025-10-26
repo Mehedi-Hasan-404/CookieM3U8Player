@@ -173,7 +173,7 @@
             android:contentDescription="Subtitles"/>
             
         <ImageButton
-            android:id="@id/exo_fullscreen_button"
+            android:id="@id/exo_fullscreen" 
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
