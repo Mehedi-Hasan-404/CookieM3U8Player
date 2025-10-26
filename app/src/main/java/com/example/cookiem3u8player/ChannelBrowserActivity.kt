@@ -80,10 +80,9 @@ class ChannelBrowserActivity : AppCompatActivity() {
     }
     
     private fun loadChannelsFromUrl(url: String) {
-        // In a real app, you'd fetch this asynchronously
         Toast.makeText(this, "Loading channels...", Toast.LENGTH_SHORT).show()
         
-        // For now, load from shared preferences if available
+        // First try to load from cache
         val prefs = getSharedPreferences("CookieM3U8PlayerPrefs", MODE_PRIVATE)
         val savedChannelsJson = prefs.getString("cached_channels_$url", null)
         
@@ -93,8 +92,22 @@ class ChannelBrowserActivity : AppCompatActivity() {
             channels.addAll(loadedChannels)
             updateChannelList()
             extractGroups()
+            Toast.makeText(this, "Loaded ${channels.size} channels", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(this, "No cached channels found. Please load playlist first.", Toast.LENGTH_LONG).show()
+            // Fetch from URL
+            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                val fetcher = PlaylistFetcher(this@ChannelBrowserActivity)
+                val result = fetcher.fetchPlaylistFromUrl(url)
+                
+                result.onSuccess { fetchedChannels ->
+                    channels.addAll(fetchedChannels)
+                    updateChannelList()
+                    extractGroups()
+                    Toast.makeText(this@ChannelBrowserActivity, "Loaded ${channels.size} channels", Toast.LENGTH_SHORT).show()
+                }.onFailure { error ->
+                    Toast.makeText(this@ChannelBrowserActivity, "Error: ${error.message}", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
     
