@@ -2,7 +2,6 @@ package com.example.cookiem3u8player
 
 import android.app.PictureInPictureParams
 import android.content.pm.ActivityInfo
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.media.AudioManager
 import android.os.Build
@@ -13,23 +12,17 @@ import android.util.Rational
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.drm.DefaultDrmSessionManager
-import com.google.android.exoplayer2.drm.FrameworkMediaDrm
-import com.google.android.exoplayer2.drm.HttpMediaDrmCallback
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.HttpDataSource
-import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
 import java.util.*
 import kotlin.math.abs
@@ -112,7 +105,7 @@ class PlayerActivity : AppCompatActivity() {
         
         pipButton.setOnClickListener { 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                enterPictureInPictureMode()
+                enterPipMode()
             } else {
                 Toast.makeText(this, "PiP not supported on this device", Toast.LENGTH_SHORT).show()
             }
@@ -270,7 +263,7 @@ class PlayerActivity : AppCompatActivity() {
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
     }
     
-    private fun enterPictureInPictureMode() {
+    private fun enterPipMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val params = PictureInPictureParams.Builder()
                 .setAspectRatio(Rational(16, 9))
@@ -293,7 +286,10 @@ class PlayerActivity : AppCompatActivity() {
     }
     
     private fun showQualityDialog() {
-        val mappedTrackInfo = trackSelector.currentMappedTrackInfo ?: return
+        val mappedTrackInfo = trackSelector.currentMappedTrackInfo ?: run {
+            Toast.makeText(this, "No track info available", Toast.LENGTH_SHORT).show()
+            return
+        }
         
         val videoRenderer = 0
         val trackGroupArray = mappedTrackInfo.getTrackGroups(videoRenderer)
@@ -341,7 +337,10 @@ class PlayerActivity : AppCompatActivity() {
     }
     
     private fun showSubtitleDialog() {
-        val mappedTrackInfo = trackSelector.currentMappedTrackInfo ?: return
+        val mappedTrackInfo = trackSelector.currentMappedTrackInfo ?: run {
+            Toast.makeText(this, "No track info available", Toast.LENGTH_SHORT).show()
+            return
+        }
         
         val textRenderer = getRendererIndex(C.TRACK_TYPE_TEXT)
         if (textRenderer == -1) {
@@ -369,7 +368,10 @@ class PlayerActivity : AppCompatActivity() {
     }
     
     private fun showAudioTrackDialog() {
-        val mappedTrackInfo = trackSelector.currentMappedTrackInfo ?: return
+        val mappedTrackInfo = trackSelector.currentMappedTrackInfo ?: run {
+            Toast.makeText(this, "No track info available", Toast.LENGTH_SHORT).show()
+            return
+        }
         
         val audioRenderer = getRendererIndex(C.TRACK_TYPE_AUDIO)
         if (audioRenderer == -1) {
@@ -386,6 +388,11 @@ class PlayerActivity : AppCompatActivity() {
                 val format = trackGroup.getFormat(trackIndex)
                 audioOptions.add(format.label ?: format.language ?: "Track $trackIndex")
             }
+        }
+        
+        if (audioOptions.isEmpty()) {
+            Toast.makeText(this, "No audio tracks available", Toast.LENGTH_SHORT).show()
+            return
         }
         
         AlertDialog.Builder(this)
@@ -490,24 +497,23 @@ class PlayerActivity : AppCompatActivity() {
                 .setAllowCrossProtocolRedirects(true)
                 .setDefaultRequestProperties(headers)
             
-            val mediaItem = MediaItem.Builder()
-                .setUri(url)
-                .apply {
-                    // Check for DRM
-                    if (streamUrl.contains("drmScheme=") && streamUrl.contains("drmLicense=")) {
-                        val drmScheme = extractDrmScheme(streamUrl)
-                        val licenseKey = extractDrmLicense(streamUrl)
-                        
-                        if (drmScheme == "clearkey" && licenseKey.isNotEmpty()) {
-                            setDrmConfiguration(
-                                MediaItem.DrmConfiguration.Builder(C.CLEARKEY_UUID)
-                                    .setLicenseUri(buildClearKeyLicenseUrl(licenseKey))
-                                    .build()
-                            )
-                        }
-                    }
+            val mediaItemBuilder = MediaItem.Builder().setUri(url)
+            
+            // Check for DRM
+            if (streamUrl.contains("drmScheme=") && streamUrl.contains("drmLicense=")) {
+                val drmScheme = extractDrmScheme(streamUrl)
+                val licenseKey = extractDrmLicense(streamUrl)
+                
+                if (drmScheme == "clearkey" && licenseKey.isNotEmpty()) {
+                    mediaItemBuilder.setDrmConfiguration(
+                        MediaItem.DrmConfiguration.Builder(C.CLEARKEY_UUID)
+                            .setLicenseUri(buildClearKeyLicenseUrl(licenseKey))
+                            .build()
+                    )
                 }
-                .build()
+            }
+            
+            val mediaItem = mediaItemBuilder.build()
             
             val mediaSource = when {
                 url.contains(".mpd") -> {
