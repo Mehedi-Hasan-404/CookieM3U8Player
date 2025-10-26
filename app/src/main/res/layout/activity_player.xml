@@ -20,13 +20,15 @@
 
     <!-- Top Overlay with Back Button and Channel Name -->
     <LinearLayout
+        android:id="@+id/top_overlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:background="#80000000"
-        android:gravity="center_vertical">
+        android:background="@drawable/gradient_top"
+        android:gravity="center_vertical"
+        android:visibility="visible">
         
         <ImageButton
             android:id="@+id/player_back_button"
