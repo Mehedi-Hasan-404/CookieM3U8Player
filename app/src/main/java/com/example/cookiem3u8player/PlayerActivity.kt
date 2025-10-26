@@ -1,7 +1,10 @@
 package com.example.cookiem3u8player
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +23,9 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var playerView: StyledPlayerView
     private lateinit var backButton: ImageButton
     private lateinit var channelNameText: TextView
+    private lateinit var topOverlay: LinearLayout
+    private lateinit var fullscreenButton: ImageButton
+    private var isFullscreen = false
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +34,8 @@ class PlayerActivity : AppCompatActivity() {
         playerView = findViewById(R.id.fullscreen_player_view)
         backButton = findViewById(R.id.player_back_button)
         channelNameText = findViewById(R.id.channel_name_text)
+        topOverlay = findViewById(R.id.top_overlay)
+        fullscreenButton = findViewById(R.id.exo_fullscreen)
         
         val channelUrl = intent.getStringExtra("channel_url") ?: ""
         val channelName = intent.getStringExtra("channel_name") ?: "Channel"
@@ -42,12 +50,44 @@ class PlayerActivity : AppCompatActivity() {
             finish()
         }
         
+        fullscreenButton.setOnClickListener {
+            toggleFullscreen()
+        }
+        
+        // Setup player visibility toggle
+        setupPlayerControlsVisibility()
+        
         if (channelUrl.isNotEmpty()) {
             initializePlayer()
             startPlayback(channelUrl, cookie, referer, origin, userAgent)
         } else {
             Toast.makeText(this, "Invalid channel URL", Toast.LENGTH_SHORT).show()
             finish()
+        }
+    }
+    
+    private fun setupPlayerControlsVisibility() {
+        playerView.setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener { visibility ->
+            // Show/hide top overlay with controls
+            topOverlay.visibility = visibility
+        })
+        
+        // Hide controls after 3 seconds
+        playerView.controllerShowTimeoutMs = 3000
+        playerView.controllerHideOnTouch = true
+    }
+    
+    private fun toggleFullscreen() {
+        if (isFullscreen) {
+            // Exit fullscreen - Portrait
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            fullscreenButton.setImageResource(R.drawable.ic_fullscreen)
+            isFullscreen = false
+        } else {
+            // Enter fullscreen - Landscape
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            fullscreenButton.setImageResource(R.drawable.ic_fullscreen_exit)
+            isFullscreen = true
         }
     }
     
@@ -71,8 +111,6 @@ class PlayerActivity : AppCompatActivity() {
                 })
             }
             playerView.player = player
-            playerView.controllerShowTimeoutMs = 5000
-            playerView.controllerHideOnTouch = true
         }
     }
     
