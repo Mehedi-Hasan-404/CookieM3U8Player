@@ -11,8 +11,8 @@ android {
         applicationId "com.example.cookiem3u8player"
         minSdk 24
         targetSdk 34
-        versionCode 3
-        versionName "3.0"
+        versionCode 4
+        versionName "4.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -54,11 +54,12 @@ dependencies {
     // CardView for channel cards
     implementation 'androidx.cardview:cardview:1.0.0'
     
-    // ExoPlayer dependencies (for HLS/DASH playback)
+    // ExoPlayer dependencies (for HLS/DASH playback with DRM)
     implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
     implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
     implementation 'com.google.android.exoplayer:exoplayer-dash:2.19.1'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
     
     // Gson for JSON serialization
     implementation 'com.google.code.gson:gson:2.10.1'
