@@ -3,31 +3,49 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:padding="16dp"
     android:background="@drawable/playlist_item_background"
     android:layout_marginBottom="8dp"
     android:layout_marginStart="8dp"
     android:layout_marginEnd="8dp">
 
-    <TextView
-        android:id="@+id/playlist_entry_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Stream Name"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="4dp"/>
+    <ImageView
+        android:id="@+id/playlist_entry_logo"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@android:drawable/ic_menu_gallery"
+        android:scaleType="centerCrop"
+        android:background="#3a3a3a"
+        android:padding="4dp"
+        android:layout_marginEnd="12dp"/>
 
-    <TextView
-        android:id="@+id/playlist_entry_url"
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="https://example.com/stream.m3u8"
-        android:textColor="#808080"
-        android:textSize="12sp"
-        android:maxLines="2"
-        android:ellipsize="end"/>
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/playlist_entry_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stream Name"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+
+        <TextView
+            android:id="@+id/playlist_entry_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="https://example.com/stream.m3u8"
+            android:textColor="#808080"
+            android:textSize="12sp"
+            android:maxLines="2"
+            android:ellipsize="end"/>
+    </LinearLayout>
 
 </LinearLayout>
