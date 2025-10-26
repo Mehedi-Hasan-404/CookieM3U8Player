@@ -25,9 +25,10 @@
         
         <activity android:name=".PlayerActivity"
             android:exported="false"
-            android:screenOrientation="landscape"
+            android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:parentActivityName=".ChannelBrowserActivity"/>
+            android:parentActivityName=".ChannelBrowserActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
         
     </application>
 
