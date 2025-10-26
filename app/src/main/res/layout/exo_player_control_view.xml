@@ -1,162 +1,174 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+package com.example.cookiem3u8player
 
-    <!-- Center Play/Pause and Skip Controls -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_centerInParent="true"
-        android:gravity="center">
+import android.content.pm.ActivityInfo
+import android.os.Bundle
+import android.view.View
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.ui.StyledPlayerView
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import com.google.android.exoplayer2.upstream.HttpDataSource
+import com.google.android.exoplayer2.util.Util
 
-        <FrameLayout
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="40dp">
-            <ImageButton
-                android:id="@id/exo_rew"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/control_button_bg"
-                android:contentDescription="Rewind"
-                android:src="@drawable/ic_rewind_10"
-                android:scaleType="centerInside"/>
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp">
-            <ImageButton
-                android:id="@id/exo_play_pause"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/play_pause_button_bg"
-                android:contentDescription="Play/Pause"
-                android:scaleType="centerInside"/>
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="40dp">
-            <ImageButton
-                android:id="@id/exo_ffwd"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/control_button_bg"
-                android:contentDescription="Forward"
-                android:src="@drawable/ic_forward_10"
-                android:scaleType="centerInside"/>
-        </FrameLayout>
-    </LinearLayout>
+class PlayerActivity : AppCompatActivity() {
     
-    <!-- Bottom Controls -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_alignParentBottom="true"
-        android:background="@drawable/gradient_bottom"
-        android:paddingBottom="8dp">
+    private var player: ExoPlayer? = null
+    private lateinit var playerView: StyledPlayerView
+    private lateinit var backButton: ImageButton
+    private lateinit var channelNameText: TextView
+    private lateinit var topOverlay: LinearLayout
+    private var fullscreenButton: ImageButton? = null
+    private var isFullscreen = false
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_player)
+        
+        playerView = findViewById(R.id.fullscreen_player_view)
+        backButton = findViewById(R.id.player_back_button)
+        channelNameText = findViewById(R.id.channel_name_text)
+        topOverlay = findViewById(R.id.top_overlay)
+        
+        // Find fullscreen button after a short delay to ensure player controls are inflated
+        playerView.post {
+            fullscreenButton = playerView.findViewById(R.id.exo_fullscreen)
+            fullscreenButton?.setOnClickListener {
+                toggleFullscreen()
+            }
+        }
+        
+        val channelUrl = intent.getStringExtra("channel_url") ?: ""
+        val channelName = intent.getStringExtra("channel_name") ?: "Channel"
+        val cookie = intent.getStringExtra("channel_cookie") ?: ""
+        val referer = intent.getStringExtra("channel_referer") ?: ""
+        val origin = intent.getStringExtra("channel_origin") ?: ""
+        val userAgent = intent.getStringExtra("channel_user_agent") ?: "Default"
+        
+        channelNameText.text = channelName
+        
+        backButton.setOnClickListener {
+            finish()
+        }
+        
+        // Setup player visibility toggle
+        setupPlayerControlsVisibility()
+        
+        if (channelUrl.isNotEmpty()) {
+            initializePlayer()
+            startPlayback(channelUrl, cookie, referer, origin, userAgent)
+        } else {
+            Toast.makeText(this, "Invalid channel URL", Toast.LENGTH_SHORT).show()
+            finish()
+        }
+    }
+    
+    private fun setupPlayerControlsVisibility() {
+        playerView.setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener { visibility ->
+            // Show/hide top overlay with controls
+            topOverlay.visibility = visibility
+        })
+        
+        // Hide controls after 3 seconds
+        playerView.controllerShowTimeoutMs = 3000
+        playerView.controllerHideOnTouch = true
+    }
+    
+    private fun toggleFullscreen() {
+        if (isFullscreen) {
+            // Exit fullscreen - Portrait
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            fullscreenButton?.setImageResource(R.drawable.ic_fullscreen)
+            isFullscreen = false
+        } else {
+            // Enter fullscreen - Landscape
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            fullscreenButton?.setImageResource(R.drawable.ic_fullscreen_exit)
+            isFullscreen = true
+        }
+    }
+    
+    private fun initializePlayer() {
+        if (player == null) {
+            player = ExoPlayer.Builder(this).build().apply {
+                addListener(object : Player.Listener {
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        when (playbackState) {
+                            Player.STATE_BUFFERING -> {
+                                Toast.makeText(this@PlayerActivity, "Buffering...", Toast.LENGTH_SHORT).show()
+                            }
+                            Player.STATE_READY -> {
+                                // Ready to play
+                            }
+                            Player.STATE_ENDED -> {
+                                Toast.makeText(this@PlayerActivity, "Playback ended", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                })
+            }
+            playerView.player = player
+        }
+    }
+    
+    private fun startPlayback(
+        streamUrl: String,
+        cookie: String,
+        referer: String,
+        origin: String,
+        userAgent: String
+    ) {
+        player?.stop()
+        player?.clearMediaItems()
+        
+        val requestProperties = mutableMapOf<String, String>()
+        
+        if (cookie.isNotEmpty()) requestProperties["Cookie"] = cookie
+        if (referer.isNotEmpty()) requestProperties["Referer"] = referer
+        if (origin.isNotEmpty()) requestProperties["Origin"] = origin
+        
+        val userAgentString = when (userAgent) {
+            "Chrome" -> "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "Firefox" -> "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+            "Safari" -> "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"
+            "Edge" -> "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+            else -> Util.getUserAgent(this, "CookieM3U8Player")
+        }
+        
+        val httpDataSourceFactory: HttpDataSource.Factory = DefaultHttpDataSource.Factory()
+            .setUserAgent(userAgentString)
+            .setAllowCrossProtocolRedirects(true)
+            .setDefaultRequestProperties(requestProperties)
 
-        <!-- Progress Bar with Time -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="8dp">
+        val mediaItem = MediaItem.fromUri(streamUrl)
+        val hlsMediaSource = HlsMediaSource.Factory(httpDataSourceFactory)
+            .createMediaSource(mediaItem)
 
-            <TextView android:id="@id/exo_position"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="13sp"
-                android:textColor="#FFFFFF"
-                android:layout_marginEnd="8dp"
-                android:textStyle="bold"/>
-            
-            <com.google.android.exoplayer2.ui.DefaultTimeBar
-                android:id="@id/exo_progress"
-                android:layout_width="0dp"
-                android:layout_height="28dp"
-                android:layout_weight="1" />
-                
-            <TextView android:id="@id/exo_duration"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="13sp"
-                android:textColor="#FFFFFF"
-                android:layout_marginStart="8dp"
-                android:textStyle="bold"/>
-        </LinearLayout>
-
-        <!-- Bottom Controls Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
-            
-            <TextView
-                android:id="@+id/exo_aspect_ratio"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:gravity="center"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:text="Fit"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1"/> 
-
-            <ImageButton
-                android:id="@+id/exo_subtitle"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginEnd="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_subtitles"
-                android:tint="#FFFFFF"
-                android:scaleType="centerInside"
-                android:contentDescription="Subtitles"/>
-
-            <ImageButton
-                android:id="@+id/exo_settings"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:layout_marginEnd="4dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_settings"
-                android:tint="#FFFFFF"
-                android:scaleType="centerInside"
-                android:contentDescription="Settings"/>
-                
-            <ImageButton
-                android:id="@id/exo_fullscreen" 
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_fullscreen"
-                android:tint="#FFFFFF"
-                android:scaleType="centerInside"
-                android:contentDescription="Fullscreen"/>
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-</RelativeLayout>
+        player?.setMediaSource(hlsMediaSource)
+        player?.playWhenReady = true
+        player?.prepare()
+        
+        Toast.makeText(this, "Loading stream...", Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun releasePlayer() {
+        player?.release()
+        player = null
+    }
+    
+    override fun onStop() {
+        super.onStop()
+        releasePlayer()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        releasePlayer()
+    }
+}
