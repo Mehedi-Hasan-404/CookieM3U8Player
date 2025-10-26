@@ -39,8 +39,13 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var qualityButton: ImageButton
     private lateinit var subtitleButton: ImageButton
     private lateinit var audioTrackButton: ImageButton
+    private lateinit var lockButton: ImageButton
+    private lateinit var backButtonControl: ImageButton
+    private lateinit var titleTextView: TextView
+    private lateinit var playbackSpeedButton: TextView
     
     private var isFullscreen = false
+    private var isLocked = false
     private lateinit var trackSelector: DefaultTrackSelector
     private lateinit var gestureDetector: GestureDetectorCompat
     
@@ -85,11 +90,17 @@ class PlayerActivity : AppCompatActivity() {
         backButton = findViewById(R.id.player_back_button)
         channelNameText = findViewById(R.id.channel_name_text)
         topOverlay = findViewById(R.id.top_overlay)
+        
+        // Control buttons from custom control layout
         fullscreenButton = findViewById(R.id.exo_fullscreen)
         pipButton = findViewById(R.id.exo_pip)
         qualityButton = findViewById(R.id.exo_quality)
         subtitleButton = findViewById(R.id.exo_subtitle)
         audioTrackButton = findViewById(R.id.exo_audio_track)
+        lockButton = findViewById(R.id.exo_lock)
+        backButtonControl = findViewById(R.id.exo_back)
+        titleTextView = findViewById(R.id.exo_title)
+        playbackSpeedButton = findViewById(R.id.exo_playback_speed)
         
         // Create overlay panels for brightness and volume
         brightnessPanel = findViewById(R.id.brightness_panel)
@@ -100,8 +111,11 @@ class PlayerActivity : AppCompatActivity() {
     
     private fun setupButtons() {
         backButton.setOnClickListener { finish() }
+        backButtonControl.setOnClickListener { finish() }
         
         fullscreenButton.setOnClickListener { toggleFullscreen() }
+        
+        lockButton.setOnClickListener { toggleLock() }
         
         pipButton.setOnClickListener { 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -117,7 +131,41 @@ class PlayerActivity : AppCompatActivity() {
         
         audioTrackButton.setOnClickListener { showAudioTrackDialog() }
         
+        playbackSpeedButton.setOnClickListener { showPlaybackSpeedDialog() }
+        
+        // Set title
+        val channelName = intent.getStringExtra("channel_name") ?: "Channel"
+        channelNameText.text = channelName
+        titleTextView.text = channelName
+        
         setupPlayerControlsVisibility()
+    }
+    
+    private fun toggleLock() {
+        isLocked = !isLocked
+        if (isLocked) {
+            lockButton.setImageResource(R.drawable.ic_lock_closed)
+            playerView.useController = false
+            Toast.makeText(this, "Controls locked", Toast.LENGTH_SHORT).show()
+        } else {
+            lockButton.setImageResource(R.drawable.ic_lock_open)
+            playerView.useController = true
+            Toast.makeText(this, "Controls unlocked", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun showPlaybackSpeedDialog() {
+        val speedOptions = arrayOf("0.25x", "0.5x", "0.75x", "Normal (1.0x)", "1.25x", "1.5x", "1.75x", "2.0x")
+        val speedValues = floatArrayOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+        
+        AlertDialog.Builder(this)
+            .setTitle("Playback Speed")
+            .setItems(speedOptions) { _, which ->
+                player?.setPlaybackSpeed(speedValues[which])
+                playbackSpeedButton.text = speedOptions[which]
+                Toast.makeText(this, "Speed: ${speedOptions[which]}", Toast.LENGTH_SHORT).show()
+            }
+            .show()
     }
     
     private fun setupPlayerControlsVisibility() {
@@ -146,6 +194,9 @@ class PlayerActivity : AppCompatActivity() {
                 distanceX: Float,
                 distanceY: Float
             ): Boolean {
+                // Disable gestures when locked
+                if (isLocked) return false
+                
                 if (e1 == null) return false
                 
                 val screenWidth = playerView.width
@@ -177,11 +228,15 @@ class PlayerActivity : AppCompatActivity() {
             }
             
             override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                // Always allow showing controls even when locked (to access unlock button)
                 playerView.performClick()
                 return true
             }
             
             override fun onDoubleTap(e: MotionEvent): Boolean {
+                // Disable double tap when locked
+                if (isLocked) return false
+                
                 player?.let {
                     if (it.isPlaying) {
                         it.pause()
