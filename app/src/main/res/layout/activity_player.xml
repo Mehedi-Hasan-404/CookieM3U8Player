@@ -53,4 +53,66 @@
             android:ellipsize="end"/>
     </LinearLayout>
 
+    <!-- Brightness Control Overlay (Left Side) -->
+    <LinearLayout
+        android:id="@+id/brightness_panel"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="32dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#CC000000"
+        android:visibility="gone"
+        android:padding="16dp">
+        
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_day"
+            android:tint="#FFFFFF"/>
+        
+        <TextView
+            android:id="@+id/brightness_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Brightness\n50%"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+
+    <!-- Volume Control Overlay (Right Side) -->
+    <LinearLayout
+        android:id="@+id/volume_panel"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="32dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#CC000000"
+        android:visibility="gone"
+        android:padding="16dp">
+        
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_volume"
+            android:tint="#FFFFFF"/>
+        
+        <TextView
+            android:id="@+id/volume_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Volume\n50%"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+
 </RelativeLayout>
