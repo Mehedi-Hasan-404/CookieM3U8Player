@@ -20,8 +20,6 @@ import com.google.gson.reflect.TypeToken
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -38,6 +36,17 @@ data class PlaylistEntry(
     var referer: String = "",
     var origin: String = "",
     var userAgent: String = "Default"
+)
+
+data class Channel(
+    val name: String,
+    val url: String,
+    val logo: String = "",
+    val cookie: String = "",
+    val referer: String = "",
+    val origin: String = "",
+    val userAgent: String = "Default",
+    val groupTitle: String = ""
 )
 
 class MainActivity : AppCompatActivity() {
@@ -77,6 +86,28 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // Initialize views
+        initializeViews()
+        
+        // Setup navigation
+        setupBottomNavigation()
+        
+        // Setup spinners
+        setupSpinners()
+        
+        // Setup lists
+        loadHistory()
+        setupHistoryRecyclerView()
+        loadPlaylist()
+        setupPlaylistRecyclerView()
+
+        // Setup buttons
+        setupButtons()
+        
+        // Initialize player
+        initializePlayer()
+    }
+
+    private fun initializeViews() {
         playerView = findViewById(R.id.player_view)
         urlEditText = findViewById(R.id.edit_text_url)
         cookieEditText = findViewById(R.id.edit_text_cookie)
@@ -94,13 +125,16 @@ class MainActivity : AppCompatActivity() {
         
         historyRecyclerView = findViewById(R.id.history_recycler_view)
         playlistRecyclerView = findViewById(R.id.playlist_recycler_view)
-        
-        // Setup bottom navigation
+    }
+
+    private fun setupBottomNavigation() {
         findViewById<LinearLayout>(R.id.nav_home).setOnClickListener { showHome() }
         findViewById<LinearLayout>(R.id.nav_history).setOnClickListener { showHistory() }
         findViewById<LinearLayout>(R.id.nav_playlist).setOnClickListener { showPlaylist() }
         findViewById<LinearLayout>(R.id.nav_settings).setOnClickListener { showSettings() }
-        
+    }
+
+    private fun setupSpinners() {
         // Setup UserAgent spinner
         val userAgents = arrayOf("Default", "Chrome", "Firefox", "Safari", "Edge")
         val userAgentAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, userAgents)
@@ -110,15 +144,9 @@ class MainActivity : AppCompatActivity() {
         val drmSchemes = arrayOf("clearkey", "widevine", "playready")
         val drmSchemeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, drmSchemes)
         drmSchemeSpinner.adapter = drmSchemeAdapter
-        
-        // Setup history
-        loadHistory()
-        setupHistoryRecyclerView()
-        
-        // Setup playlist
-        loadPlaylist()
-        setupPlaylistRecyclerView()
+    }
 
+    private fun setupButtons() {
         playButton.setOnClickListener {
             val url = urlEditText.text.toString().trim()
             if (url.isEmpty()) {
@@ -137,28 +165,217 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        // History icon button
         findViewById<ImageButton>(R.id.button_history).setOnClickListener {
             showHistory()
         }
         
-        // Playlist add URL button
         findViewById<Button>(R.id.button_add_url).setOnClickListener {
             showAddUrlDialog()
         }
         
-        // Playlist select file button
         findViewById<Button>(R.id.button_select_file).setOnClickListener {
             openFilePicker()
         }
         
-        // Playlist clear button
         findViewById<Button>(R.id.button_clear_playlist).setOnClickListener {
             showClearPlaylistDialog()
         }
+    }
+
+    private fun setupPlaylistRecyclerView() {
+        playlistAdapter = PlaylistEntriesAdapter(
+            playlistEntries,
+            onItemClick = { entry ->
+                // Check if this is likely a multi-channel playlist
+                if (shouldOpenChannelBrowser(entry)) {
+                    openChannelBrowser(entry)
+                } else {
+                    playDirectStream(entry)
+                }
+            },
+            onItemLongClick = { entry ->
+                openChannelBrowser(entry)
+            }
+        )
+        playlistRecyclerView.layoutManager = LinearLayoutManager(this)
+        playlistRecyclerView.adapter = playlistAdapter
+    }
+
+    private fun shouldOpenChannelBrowser(entry: PlaylistEntry): Boolean {
+        // Heuristic to determine if we should open channel browser
+        return entry.url.endsWith(".m3u") || 
+               entry.url.endsWith(".m3u8") ||
+               entry.url.endsWith(".json") ||
+               entry.name.contains("playlist", ignoreCase = true) ||
+               entry.name.contains("channels", ignoreCase = true)
+    }
+
+    private fun openChannelBrowser(entry: PlaylistEntry) {
+        val intent = Intent(this, ChannelBrowserActivity::class.java).apply {
+            putExtra("playlist_entry", Gson().toJson(entry))
+            putExtra("playlist_url", entry.url)
+        }
+        startActivity(intent)
+    }
+
+    private fun playDirectStream(entry: PlaylistEntry) {
+        urlEditText.setText(entry.url)
+        if (entry.cookie.isNotEmpty()) cookieEditText.setText(entry.cookie)
+        if (entry.referer.isNotEmpty()) refererEditText.setText(entry.referer)
+        if (entry.origin.isNotEmpty()) originEditText.setText(entry.origin)
+        showHome()
+        addToHistory(entry.url)
+        startPlayback(
+            entry.url,
+            entry.cookie.ifEmpty { cookieEditText.text.toString().trim() },
+            entry.referer.ifEmpty { refererEditText.text.toString().trim() },
+            entry.origin.ifEmpty { originEditText.text.toString().trim() },
+            drmLicenseEditText.text.toString().trim(),
+            entry.userAgent,
+            drmSchemeSpinner.selectedItem.toString()
+        )
+    }
+
+    private fun parsePlaylistFile(uri: Uri) {
+        try {
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                val content = inputStream.bufferedReader().use { it.readText() }
+                
+                playlistEntries.clear()
+                val channels = mutableListOf<Channel>()
+                
+                if (content.trim().startsWith("[") || content.trim().startsWith("{")) {
+                    channels.addAll(parseJsonPlaylistWithChannels(content))
+                } else {
+                    channels.addAll(parseM3UPlaylistWithChannels(content))
+                }
+                
+                channels.forEach { channel ->
+                    playlistEntries.add(PlaylistEntry(
+                        name = channel.name,
+                        url = channel.url,
+                        logo = channel.logo,
+                        cookie = channel.cookie,
+                        referer = channel.referer,
+                        origin = channel.origin,
+                        userAgent = channel.userAgent
+                    ))
+                }
+                
+                if (channels.isNotEmpty()) {
+                    val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    val channelsJson = Gson().toJson(channels)
+                    prefs.edit().putString("cached_channels_file", channelsJson).apply()
+                }
+                
+                playlistAdapter.notifyDataSetChanged()
+                savePlaylist()
+                Toast.makeText(this, "Loaded ${playlistEntries.size} entries", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Log.e("PlaylistParser", "Error parsing playlist", e)
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun parseJsonPlaylistWithChannels(content: String): List<Channel> {
+        val channels = mutableListOf<Channel>()
+        try {
+            val jsonArray = JSONArray(content)
+            for (i in 0 until jsonArray.length()) {
+                val jsonObject = jsonArray.getJSONObject(i)
+                val channel = Channel(
+                    name = jsonObject.optString("name", "Channel $i"),
+                    url = jsonObject.optString("link", jsonObject.optString("url", "")),
+                    logo = jsonObject.optString("logo", ""),
+                    cookie = jsonObject.optString("cookie", ""),
+                    referer = jsonObject.optString("referer", ""),
+                    origin = jsonObject.optString("origin", ""),
+                    userAgent = jsonObject.optString("userAgent", "Default"),
+                    groupTitle = jsonObject.optString("group", jsonObject.optString("category", ""))
+                )
+                if (channel.url.isNotEmpty()) {
+                    channels.add(channel)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("PlaylistParser", "Error parsing JSON", e)
+        }
+        return channels
+    }
+
+    private fun parseM3UPlaylistWithChannels(content: String): List<Channel> {
+        val channels = mutableListOf<Channel>()
+        val lines = content.lines()
+        var currentName = ""
+        var currentLogo = ""
+        var currentGroup = ""
         
-        // Initialize player with enhanced controls
-        initializePlayer()
+        for ((index, line) in lines.withIndex()) {
+            val trimmedLine = line.trim()
+            
+            when {
+                trimmedLine.startsWith("#EXTINF:") -> {
+                    val logoMatch = Regex("""tvg-logo="([^"]+)"""").find(trimmedLine)
+                    currentLogo = logoMatch?.groupValues?.get(1) ?: ""
+                    
+                    val groupMatch = Regex("""group-title="([^"]+)"""").find(trimmedLine)
+                    currentGroup = groupMatch?.groupValues?.get(1) ?: ""
+                    
+                    val commaIndex = trimmedLine.lastIndexOf(',')
+                    currentName = if (commaIndex != -1) {
+                        trimmedLine.substring(commaIndex + 1).trim()
+                    } else {
+                        "Channel ${index + 1}"
+                    }
+                }
+                
+                trimmedLine.startsWith("http") || trimmedLine.startsWith("https") -> {
+                    if (currentName.isEmpty()) {
+                        currentName = "Stream ${index + 1}"
+                    }
+                    
+                    val urlParts = trimmedLine.split("|")
+                    val url = urlParts[0].trim()
+                    var referer = ""
+                    var cookie = ""
+                    var origin = ""
+                    var userAgent = "Default"
+                    
+                    if (urlParts.size > 1) {
+                        for (i in 1 until urlParts.size) {
+                            val param = urlParts[i].trim()
+                            when {
+                                param.startsWith("Referer=", ignoreCase = true) -> 
+                                    referer = param.substring(8)
+                                param.startsWith("Cookie=", ignoreCase = true) -> 
+                                    cookie = param.substring(7)
+                                param.startsWith("Origin=", ignoreCase = true) -> 
+                                    origin = param.substring(7)
+                                param.startsWith("User-Agent=", ignoreCase = true) -> 
+                                    userAgent = "Chrome"
+                            }
+                        }
+                    }
+                    
+                    channels.add(Channel(
+                        name = currentName,
+                        url = url,
+                        logo = currentLogo,
+                        referer = referer,
+                        cookie = cookie,
+                        origin = origin,
+                        userAgent = userAgent,
+                        groupTitle = currentGroup
+                    ))
+                    
+                    currentName = ""
+                    currentLogo = ""
+                }
+            }
+        }
+        
+        return channels
     }
 
     private fun showHome() {
@@ -231,30 +448,6 @@ class MainActivity : AppCompatActivity() {
         historyRecyclerView.adapter = historyAdapter
     }
     
-    private fun setupPlaylistRecyclerView() {
-        playlistAdapter = PlaylistEntriesAdapter(playlistEntries,
-            onItemClick = { entry ->
-                urlEditText.setText(entry.url)
-                if (entry.cookie.isNotEmpty()) cookieEditText.setText(entry.cookie)
-                if (entry.referer.isNotEmpty()) refererEditText.setText(entry.referer)
-                if (entry.origin.isNotEmpty()) originEditText.setText(entry.origin)
-                showHome()
-                addToHistory(entry.url)
-                startPlayback(
-                    entry.url,
-                    entry.cookie.ifEmpty { cookieEditText.text.toString().trim() },
-                    entry.referer.ifEmpty { refererEditText.text.toString().trim() },
-                    entry.origin.ifEmpty { originEditText.text.toString().trim() },
-                    drmLicenseEditText.text.toString().trim(),
-                    entry.userAgent,
-                    drmSchemeSpinner.selectedItem.toString()
-                )
-            }
-        )
-        playlistRecyclerView.layoutManager = LinearLayoutManager(this)
-        playlistRecyclerView.adapter = playlistAdapter
-    }
-    
     private fun showAddUrlDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_url, null)
         val nameInput = dialogView.findViewById<EditText>(R.id.edit_name)
@@ -295,7 +488,13 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "*/*"
-            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("*/*", "audio/x-mpegurl", "application/vnd.apple.mpegurl", "application/json", "text/plain"))
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(
+                "*/*", 
+                "audio/x-mpegurl", 
+                "application/vnd.apple.mpegurl", 
+                "application/json", 
+                "text/plain"
+            ))
         }
         startActivityForResult(intent, REQUEST_CODE_PICK_FILE)
     }
@@ -305,151 +504,6 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == REQUEST_CODE_PICK_FILE && resultCode == RESULT_OK) {
             data?.data?.let { uri ->
                 parsePlaylistFile(uri)
-            }
-        }
-    }
-    
-    private fun parsePlaylistFile(uri: Uri) {
-        try {
-            contentResolver.openInputStream(uri)?.use { inputStream ->
-                val content = inputStream.bufferedReader().use { it.readText() }
-                
-                playlistEntries.clear()
-                
-                // Try to parse as JSON first
-                if (content.trim().startsWith("[") || content.trim().startsWith("{")) {
-                    parseJsonPlaylist(content)
-                } else {
-                    // Parse as M3U/M3U8
-                    parseM3UPlaylist(content)
-                }
-                
-                playlistAdapter.notifyDataSetChanged()
-                savePlaylist()
-                Toast.makeText(this, "Loaded ${playlistEntries.size} entries", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Log.e("PlaylistParser", "Error parsing playlist", e)
-            Toast.makeText(this, "Error parsing playlist: ${e.message}", Toast.LENGTH_LONG).show()
-        }
-    }
-    
-    private fun parseJsonPlaylist(content: String) {
-        try {
-            val jsonArray = JSONArray(content)
-            for (i in 0 until jsonArray.length()) {
-                val jsonObject = jsonArray.getJSONObject(i)
-                val entry = PlaylistEntry(
-                    name = jsonObject.optString("name", "Channel $i"),
-                    url = jsonObject.optString("link", jsonObject.optString("url", "")),
-                    logo = jsonObject.optString("logo", ""),
-                    cookie = jsonObject.optString("cookie", ""),
-                    referer = jsonObject.optString("referer", ""),
-                    origin = jsonObject.optString("origin", ""),
-                    userAgent = jsonObject.optString("userAgent", "Default")
-                )
-                if (entry.url.isNotEmpty()) {
-                    playlistEntries.add(entry)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("PlaylistParser", "Error parsing JSON", e)
-        }
-    }
-    
-    private fun parseM3UPlaylist(content: String) {
-        val lines = content.lines()
-        var currentName = ""
-        var currentLogo = ""
-        var currentGroup = ""
-        var lineNumber = 0
-        
-        for (line in lines) {
-            lineNumber++
-            val trimmedLine = line.trim()
-            
-            when {
-                // Parse #EXTINF line
-                trimmedLine.startsWith("#EXTINF:") -> {
-                    // Extract tvg-logo
-                    val logoMatch = Regex("""tvg-logo="([^"]+)"""").find(trimmedLine)
-                    currentLogo = logoMatch?.groupValues?.get(1) ?: ""
-                    
-                    // Extract group-title
-                    val groupMatch = Regex("""group-title="([^"]+)"""").find(trimmedLine)
-                    currentGroup = groupMatch?.groupValues?.get(1) ?: ""
-                    
-                    // Extract name (after the last comma)
-                    val commaIndex = trimmedLine.lastIndexOf(',')
-                    if (commaIndex != -1) {
-                        currentName = trimmedLine.substring(commaIndex + 1).trim()
-                    }
-                    
-                    // If no name found, try to extract from the entire line
-                    if (currentName.isEmpty()) {
-                        currentName = "Channel $lineNumber"
-                    }
-                }
-                // Parse URL lines
-                trimmedLine.startsWith("http") || trimmedLine.startsWith("https") -> {
-                    if (currentName.isEmpty()) {
-                        currentName = "Stream $lineNumber"
-                    }
-                    
-                    // Parse URL for embedded headers (like |Referer=...)
-                    val urlParts = trimmedLine.split("|")
-                    val url = urlParts[0].trim()
-                    var referer = ""
-                    var cookie = ""
-                    var userAgent = "Default"
-                    
-                    // Parse additional parameters
-                    if (urlParts.size > 1) {
-                        for (i in 1 until urlParts.size) {
-                            val param = urlParts[i].trim()
-                            when {
-                                param.startsWith("Referer=", ignoreCase = true) -> {
-                                    referer = param.substring(8)
-                                }
-                                param.startsWith("cookie=", ignoreCase = true) -> {
-                                    cookie = param.substring(7)
-                                }
-                                param.startsWith("User-Agent=", ignoreCase = true) -> {
-                                    userAgent = "Chrome" // Default to Chrome for custom user agents
-                                }
-                            }
-                        }
-                    }
-                    
-                    val entry = PlaylistEntry(
-                        name = if (currentGroup.isNotEmpty()) "$currentGroup: $currentName" else currentName,
-                        url = url,
-                        logo = currentLogo,
-                        referer = referer,
-                        cookie = cookie,
-                        userAgent = userAgent
-                    )
-                    playlistEntries.add(entry)
-                    
-                    // Reset for next entry
-                    currentName = ""
-                    currentLogo = ""
-                }
-                // Parse #KODIPROP lines for headers
-                trimmedLine.startsWith("#KODIPROP:") -> {
-                    // These are typically for DRM content, can be extended later
-                }
-                // Parse #EXTVLCOPT lines
-                trimmedLine.startsWith("#EXTVLCOPT:") -> {
-                    val optValue = trimmedLine.substring(11).trim()
-                    if (optValue.startsWith("http-user-agent=", ignoreCase = true)) {
-                        // Store user agent for next entry
-                    }
-                }
-                // Skip other comments and empty lines
-                trimmedLine.startsWith("#") || trimmedLine.isEmpty() -> {
-                    // Skip
-                }
             }
         }
     }
@@ -499,7 +553,6 @@ class MainActivity : AppCompatActivity() {
     private fun initializePlayer() {
         if (player == null) {
             player = ExoPlayer.Builder(this).build().apply {
-                // Add playback state listener
                 addListener(object : Player.Listener {
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         when (playbackState) {
