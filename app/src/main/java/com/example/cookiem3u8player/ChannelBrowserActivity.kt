@@ -3,22 +3,14 @@ package com.example.cookiem3u8player
 import android.content.Intent
 import android.os.Bundle
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-
-data class Channel(
-    val name: String,
-    val url: String,
-    val logo: String = "",
-    val cookie: String = "",
-    val referer: String = "",
-    val origin: String = "",
-    val userAgent: String = "Default",
-    val groupTitle: String = ""
-)
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class ChannelBrowserActivity : AppCompatActivity() {
     
@@ -43,7 +35,6 @@ class ChannelBrowserActivity : AppCompatActivity() {
         titleText = findViewById(R.id.title_text)
         groupSpinner = findViewById(R.id.group_spinner)
         
-        // Get playlist entry from intent
         val playlistJson = intent.getStringExtra("playlist_entry")
         val playlistEntry = if (playlistJson != null) {
             Gson().fromJson(playlistJson, PlaylistEntry::class.java)
@@ -51,38 +42,31 @@ class ChannelBrowserActivity : AppCompatActivity() {
         
         titleText.text = playlistEntry?.name ?: "Channels"
         
-        // Setup back button
         backButton.setOnClickListener {
             finish()
         }
         
-        // Setup search button
         searchButton.setOnClickListener {
             showSearchDialog()
         }
         
-        // Setup grid layout
         channelRecyclerView.layoutManager = GridLayoutManager(this, 3)
         
-        // Setup adapter
         channelAdapter = ChannelAdapter(filteredChannels) { channel ->
             playChannel(channel)
         }
         channelRecyclerView.adapter = channelAdapter
         
-        // Load channels from the playlist
         playlistEntry?.let {
             loadChannelsFromUrl(it.url)
         }
         
-        // Setup group filter
         setupGroupSpinner()
     }
     
     private fun loadChannelsFromUrl(url: String) {
         Toast.makeText(this, "Loading channels...", Toast.LENGTH_SHORT).show()
         
-        // First try to load from cache
         val prefs = getSharedPreferences("CookieM3U8PlayerPrefs", MODE_PRIVATE)
         val savedChannelsJson = prefs.getString("cached_channels_$url", null)
         
@@ -94,7 +78,6 @@ class ChannelBrowserActivity : AppCompatActivity() {
             extractGroups()
             Toast.makeText(this, "Loaded ${channels.size} channels", Toast.LENGTH_SHORT).show()
         } else {
-            // Fetch from URL using lifecycleScope
             lifecycleScope.launch {
                 val fetcher = PlaylistFetcher(this@ChannelBrowserActivity)
                 val result = fetcher.fetchPlaylistFromUrl(url)
@@ -159,7 +142,7 @@ class ChannelBrowserActivity : AppCompatActivity() {
         val input = EditText(this)
         input.hint = "Search channels..."
         
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        AlertDialog.Builder(this)
             .setTitle("Search")
             .setView(input)
             .setPositiveButton("Search") { _, _ ->
