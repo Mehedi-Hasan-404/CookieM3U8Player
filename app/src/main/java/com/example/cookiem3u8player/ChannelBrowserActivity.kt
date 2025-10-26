@@ -94,8 +94,8 @@ class ChannelBrowserActivity : AppCompatActivity() {
             extractGroups()
             Toast.makeText(this, "Loaded ${channels.size} channels", Toast.LENGTH_SHORT).show()
         } else {
-            // Fetch from URL
-            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+            // Fetch from URL using lifecycleScope
+            lifecycleScope.launch {
                 val fetcher = PlaylistFetcher(this@ChannelBrowserActivity)
                 val result = fetcher.fetchPlaylistFromUrl(url)
                 
