@@ -23,32 +23,6 @@ import android.net.Uri
 import org.json.JSONArray
 import org.json.JSONObject
 
-data class HistoryItem(
-    val url: String,
-    val timestamp: Long = System.currentTimeMillis()
-)
-
-data class PlaylistEntry(
-    var name: String = "",
-    var url: String = "",
-    var logo: String = "",
-    var cookie: String = "",
-    var referer: String = "",
-    var origin: String = "",
-    var userAgent: String = "Default"
-)
-
-data class Channel(
-    val name: String,
-    val url: String,
-    val logo: String = "",
-    val cookie: String = "",
-    val referer: String = "",
-    val origin: String = "",
-    val userAgent: String = "Default",
-    val groupTitle: String = ""
-)
-
 class MainActivity : AppCompatActivity() {
 
     private var player: ExoPlayer? = null
@@ -85,25 +59,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize views
         initializeViews()
-        
-        // Setup navigation
         setupBottomNavigation()
-        
-        // Setup spinners
         setupSpinners()
         
-        // Setup lists
         loadHistory()
         setupHistoryRecyclerView()
         loadPlaylist()
         setupPlaylistRecyclerView()
 
-        // Setup buttons
         setupButtons()
-        
-        // Initialize player
         initializePlayer()
     }
 
@@ -135,12 +100,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSpinners() {
-        // Setup UserAgent spinner
         val userAgents = arrayOf("Default", "Chrome", "Firefox", "Safari", "Edge")
         val userAgentAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, userAgents)
         userAgentSpinner.adapter = userAgentAdapter
         
-        // Setup DRM Scheme spinner
         val drmSchemes = arrayOf("clearkey", "widevine", "playready")
         val drmSchemeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, drmSchemes)
         drmSchemeSpinner.adapter = drmSchemeAdapter
@@ -186,7 +149,6 @@ class MainActivity : AppCompatActivity() {
         playlistAdapter = PlaylistEntriesAdapter(
             playlistEntries,
             onItemClick = { entry ->
-                // Check if this is likely a multi-channel playlist
                 if (shouldOpenChannelBrowser(entry)) {
                     openChannelBrowser(entry)
                 } else {
@@ -202,7 +164,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun shouldOpenChannelBrowser(entry: PlaylistEntry): Boolean {
-        // Heuristic to determine if we should open channel browser
         return entry.url.endsWith(".m3u") || 
                entry.url.endsWith(".m3u8") ||
                entry.url.endsWith(".json") ||
