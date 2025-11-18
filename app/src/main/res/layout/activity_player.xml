@@ -4,21 +4,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
+    android:background="#000000"
+    android:keepScreenOn="true">
 
-    <!-- Fullscreen Player -->
-    <com.google.android.exoplayer2.ui.StyledPlayerView
+    <androidx.media3.ui.PlayerView
         android:id="@+id/fullscreen_player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#000000"
+        android:layout_centerInParent="true"
         app:resize_mode="fit"
         app:use_controller="true"
         app:show_buffering="when_playing"
         app:controller_layout_id="@layout/exo_player_control_view"
         app:surface_type="surface_view"/>
 
-    <!-- Top Overlay with Back Button and Channel Name -->
     <LinearLayout
         android:id="@+id/top_overlay"
         android:layout_width="match_parent"
@@ -53,65 +53,31 @@
             android:ellipsize="end"/>
     </LinearLayout>
 
-    <!-- Brightness Control Overlay (Left Side) -->
     <LinearLayout
-        android:id="@+id/brightness_panel"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_centerVertical="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="32dp"
+        android:id="@+id/center_info_panel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="#80000000"
+        android:padding="16dp"
+        android:visibility="gone"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="#CC000000"
-        android:visibility="gone"
-        android:padding="16dp">
-        
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_day"
-            android:tint="#FFFFFF"/>
-        
-        <TextView
-            android:id="@+id/brightness_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Brightness\n50%"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:gravity="center"
-            android:layout_marginTop="8dp"/>
-    </LinearLayout>
+        android:elevation="10dp">
 
-    <!-- Volume Control Overlay (Right Side) -->
-    <LinearLayout
-        android:id="@+id/volume_panel"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_centerVertical="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="32dp"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="#CC000000"
-        android:visibility="gone"
-        android:padding="16dp">
-        
         <ImageView
+            android:id="@+id/info_icon"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/ic_volume"
             android:tint="#FFFFFF"/>
-        
+
         <TextView
-            android:id="@+id/volume_text"
+            android:id="@+id/info_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Volume\n50%"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:gravity="center"
+            android:textSize="16sp"
+            android:textStyle="bold"
             android:layout_marginTop="8dp"/>
     </LinearLayout>
 
