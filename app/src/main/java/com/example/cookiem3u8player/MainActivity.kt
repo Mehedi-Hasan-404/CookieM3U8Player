@@ -1,35 +1,38 @@
 package com.example.cookiem3u8player
 
-import android.os.Bundle
-import android.widget.*
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.ui.StyledPlayerView
-import com.google.android.exoplayer2.source.hls.HlsMediaSource
-import com.google.android.exoplayer2.source.dash.DashMediaSource
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.google.android.exoplayer2.upstream.HttpDataSource
-import com.google.android.exoplayer2.util.Util
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.C
-import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
+import android.util.Base64
+import android.util.Log
+import android.view.View
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.HttpDataSource
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.ui.PlayerView
+import androidx.media3.common.util.Util
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.json.JSONArray
-import org.json.JSONObject
 import java.util.*
 
+@UnstableApi
 class MainActivity : AppCompatActivity() {
 
     private var player: ExoPlayer? = null
-    private lateinit var playerView: StyledPlayerView
+    private lateinit var playerView: PlayerView
     private lateinit var urlEditText: EditText
     private lateinit var cookieEditText: EditText
     private lateinit var refererEditText: EditText
@@ -531,6 +534,9 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
+                    override fun onPlayerError(error: PlaybackException) {
+                        Toast.makeText(applicationContext, "Player Error: ${error.message}", Toast.LENGTH_LONG).show()
+                    }
                 })
             }
             playerView.player = player
@@ -548,9 +554,9 @@ class MainActivity : AppCompatActivity() {
         userAgent: String,
         drmScheme: String
     ) {
-        initializePlayer()
-        player?.stop()
-        player?.clearMediaItems()
+        // Release previous player to ensure clean state
+        player?.release()
+        player = null
         
         try {
             // Parse URL with embedded headers
@@ -570,10 +576,20 @@ class MainActivity : AppCompatActivity() {
                 else -> Util.getUserAgent(this, "CookieM3U8Player")
             }
             
-            val httpDataSourceFactory: HttpDataSource.Factory = DefaultHttpDataSource.Factory()
+            // Create DataSource Factory with headers
+            val httpDataSourceFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(userAgentString)
                 .setAllowCrossProtocolRedirects(true)
                 .setDefaultRequestProperties(headers)
+
+            // Initialize Player with MediaSourceFactory that uses our DataSource
+            player = ExoPlayer.Builder(this)
+                .setMediaSourceFactory(DefaultMediaSourceFactory(this).setDataSourceFactory(httpDataSourceFactory))
+                .build()
+
+            playerView.player = player
+            playerView.controllerShowTimeoutMs = 5000
+            playerView.controllerHideOnTouch = true
 
             val mediaItemBuilder = MediaItem.Builder().setUri(url)
             
@@ -592,19 +608,8 @@ class MainActivity : AppCompatActivity() {
             }
             
             val mediaItem = mediaItemBuilder.build()
-            
-            val mediaSource = when {
-                url.contains(".mpd") -> {
-                    DashMediaSource.Factory(httpDataSourceFactory)
-                        .createMediaSource(mediaItem)
-                }
-                else -> {
-                    HlsMediaSource.Factory(httpDataSourceFactory)
-                        .createMediaSource(mediaItem)
-                }
-            }
 
-            player?.setMediaSource(mediaSource)
+            player?.setMediaItem(mediaItem)
             player?.playWhenReady = true
             player?.prepare()
             
@@ -654,9 +659,9 @@ class MainActivity : AppCompatActivity() {
             val kid = parts[0]
             val key = parts[1]
             return "data:application/json;base64,${
-                android.util.Base64.encodeToString(
+                Base64.encodeToString(
                     """{"keys":[{"kty":"oct","k":"$key","kid":"$kid"}],"type":"temporary"}""".toByteArray(),
-                    android.util.Base64.NO_WRAP
+                    Base64.NO_WRAP
                 )
             }"
         }
