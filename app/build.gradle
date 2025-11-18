@@ -54,20 +54,21 @@ dependencies {
     // CardView for channel cards
     implementation 'androidx.cardview:cardview:1.0.0'
     
-    // --- Old ExoPlayer dependencies REMOVED ---
-    // implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
-    // implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
-    // implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
-    // implementation 'com.google.android.exoplayer:exoplayer-dash:2.19.1'
-    // implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
+    // --- ExoPlayer Dependencies (Restored) ---
+    // These match the imports (com.google.android.exoplayer2.*) used in your source code
+    implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
+    implementation 'com.google.android.exoplayer:exoplayer-dash:2.19.1'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
     
-    // --- NEW Media3 dependencies ADDED ---
-    // Import the BoM to manage all Media3 library versions (e.g., 1.3.1)
-    implementation platform('androidx.media3:media3-bom:1.3.1')
-    implementation 'androidx.media3:media3-exoplayer'
-    implementation 'androidx.media3:media3-ui'
-    implementation 'androidx.media3:media3-exoplayer-hls'
-    implementation 'androidx.media3:media3-exoplayer-dash'
+    // --- Media3 dependencies (Commented out) ---
+    // Un-comment these only if you migrate your Java/Kotlin code to androidx.media3.*
+    // implementation platform('androidx.media3:media3-bom:1.3.1')
+    // implementation 'androidx.media3:media3-exoplayer'
+    // implementation 'androidx.media3:media3-ui'
+    // implementation 'androidx.media3:media3-exoplayer-hls'
+    // implementation 'androidx.media3:media3-exoplayer-dash'
     
     // Gson for JSON serialization
     implementation 'com.google.code.gson:gson:2.10.1'
